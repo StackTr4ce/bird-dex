@@ -4,7 +4,7 @@ import {
   Box, Typography, Paper, CircularProgress, Grid, Button, Stack, Avatar, Chip
 } from '@mui/material';
 import { supabase } from '../supabaseClient';
-import PhotoUpload from '../components/PhotoUpload';
+import SelectPhotoModal from '../components/SelectPhotoModal';
 import SupabaseImage from '../components/SupabaseImage';
 import { useAuth } from '../components/AuthProvider';
 
@@ -18,13 +18,21 @@ interface Quest {
   end_time: string;
 }
 
+
 interface Entry {
   id: string;
   user_id: string;
   quest_id: string;
-  image_path: string;
+  photo_id: string;
   created_at: string;
-  votes: number;
+  // votes: number; // Not present in schema, remove if not used
+}
+
+interface Photo {
+  id: string;
+  url: string;
+  thumbnail_url?: string;
+  created_at: string;
 }
 
 const QuestDetailPage = () => {
@@ -35,8 +43,9 @@ const QuestDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [votedEntryId, setVotedEntryId] = useState<string | null>(null);
   const [submittingVote, setSubmittingVote] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
+  const [showSelectModal, setShowSelectModal] = useState(false);
   const [myEntry, setMyEntry] = useState<Entry | null>(null);
+  const [photoMap, setPhotoMap] = useState<Record<string, Photo>>({});
 
   useEffect(() => {
     const fetchQuestAndEntries = async () => {
@@ -48,6 +57,16 @@ const QuestDetailPage = () => {
       if (user) {
         const mine = (entriesData || []).find((e: Entry) => e.user_id === user.id);
         setMyEntry(mine || null);
+      }
+      // Fetch all photos for these entries
+      const photoIds = (entriesData || []).map((e: Entry) => e.photo_id);
+      if (photoIds.length > 0) {
+        const { data: photosData } = await supabase.from('photos').select('id,url,thumbnail_url,created_at').in('id', photoIds);
+        const map: Record<string, Photo> = {};
+        (photosData || []).forEach((p: Photo) => { map[p.id] = p; });
+        setPhotoMap(map);
+      } else {
+        setPhotoMap({});
       }
       setLoading(false);
     };
@@ -73,14 +92,33 @@ const QuestDetailPage = () => {
     setSubmittingVote(false);
   };
 
-  const handleUploadComplete = async () => {
-    setShowUpload(false);
-    // Refresh entries
+
+  // Handle when a user selects a photo from the modal
+  const handlePhotoSelect = async (photo: { id: string; url: string }) => {
+    if (!user || !questId) return;
+    // Insert quest entry using photo_id
+    await supabase.from('quest_entries').insert({
+      user_id: user.id,
+      quest_id: questId,
+      photo_id: photo.id,
+    });
+    setShowSelectModal(false);
+    // Refresh entries and photos
     const { data: entriesData } = await supabase.from('quest_entries').select('*').eq('quest_id', questId);
     setEntries(entriesData || []);
     if (user) {
       const mine = (entriesData || []).find((e: Entry) => e.user_id === user.id);
       setMyEntry(mine || null);
+    }
+    // Fetch all photos for these entries
+    const photoIds = (entriesData || []).map((e: Entry) => e.photo_id);
+    if (photoIds.length > 0) {
+      const { data: photosData } = await supabase.from('photos').select('id,url,thumbnail_url,created_at').in('id', photoIds);
+      const map: Record<string, Photo> = {};
+      (photosData || []).forEach((p: Photo) => { map[p.id] = p; });
+      setPhotoMap(map);
+    } else {
+      setPhotoMap({});
     }
   };
 
@@ -103,42 +141,42 @@ const QuestDetailPage = () => {
         {`Start: ${new Date(quest.start_time).toLocaleString()} | End: ${new Date(quest.end_time).toLocaleString()}`}
       </Typography>
       <Box sx={{ mb: 2 }}>
-        {myEntry ? (
-          <Paper variant="outlined" sx={{ p: 2, mb: 2, border: '2px solid', borderColor: 'primary.main', background: 'rgba(0,0,0,0.04)' }}>
+        {myEntry && photoMap[myEntry.photo_id] ? (
+          <Paper variant="outlined" sx={{ p: 2, mb: 2, border: '2.5px solid', borderColor: 'primary.main', background: 'rgba(0,0,0,0.04)' }}>
             <Typography variant="subtitle1" color="primary">Your Entry</Typography>
-            <SupabaseImage path={myEntry.image_path} width={240} height={240} style={{ borderRadius: 8, marginTop: 8 }} />
+            <SupabaseImage path={photoMap[myEntry.photo_id].url} width={240} height={240} style={{ borderRadius: 8, marginTop: 8 }} />
           </Paper>
         ) : (
-          user && <Button variant="contained" onClick={() => setShowUpload(true)}>Submit Your Entry</Button>
+          user && <Button variant="contained" onClick={() => setShowSelectModal(true)}>Submit Your Entry</Button>
         )}
-        {showUpload && (
-          <PhotoUpload
-            onUpload={handleUploadComplete}
-            questId={questId as string}
-            onCancel={() => setShowUpload(false)}
-          />
-        )}
+        <SelectPhotoModal
+          open={showSelectModal}
+          onClose={() => setShowSelectModal(false)}
+          onSelect={handlePhotoSelect}
+        />
       </Box>
       <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>Entries</Typography>
       <Grid container spacing={2}>
         {entries.filter(e => !myEntry || e.id !== myEntry.id).map(entry => (
-          <Grid key={entry.id} xs={12} sm={6} md={4} item>
-            <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
-              <SupabaseImage path={entry.image_path} width={200} height={200} style={{ borderRadius: 8 }} />
-              <Box sx={{ mt: 1 }}>
-                <Button
-                  variant={votedEntryId === entry.id ? 'contained' : 'outlined'}
-                  color={votedEntryId === entry.id ? 'primary' : 'inherit'}
-                  size="small"
-                  disabled={submittingVote}
-                  onClick={() => handleVote(entry.id)}
-                  sx={{ mt: 1 }}
-                >
-                  {votedEntryId === entry.id ? 'Voted' : 'Vote'}
-                </Button>
-              </Box>
-            </Paper>
-          </Grid>
+          photoMap[entry.photo_id] && (
+            <Grid item key={entry.id} xs={12} sm={6} md={4}>
+              <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
+                <SupabaseImage path={photoMap[entry.photo_id].url} width={200} height={200} style={{ borderRadius: 8 }} />
+                <Box sx={{ mt: 1 }}>
+                  <Button
+                    variant={votedEntryId === entry.id ? 'contained' : 'outlined'}
+                    color={votedEntryId === entry.id ? 'primary' : 'inherit'}
+                    size="small"
+                    disabled={submittingVote}
+                    onClick={() => handleVote(entry.id)}
+                    sx={{ mt: 1 }}
+                  >
+                    {votedEntryId === entry.id ? 'Voted' : 'Vote'}
+                  </Button>
+                </Box>
+              </Paper>
+            </Grid>
+          )
         ))}
       </Grid>
     </Box>
