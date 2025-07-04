@@ -17,20 +17,19 @@ import {
   TextField,
 } from '@mui/material';
 
-interface Species {
-  id: string;
-  name: string;
+
+
+
+
+interface PhotoUploadProps {
+  onUpload?: () => void;
+  questId?: string;
+  onCancel?: () => void;
 }
 
-const defaultSpecies: Species[] = [
-  { id: 'b1a2c3d4-e5f6-7890-abcd-ef1234567890', name: 'American Pelican' },
-  { id: 'c2b3a4d5-f6e7-8901-bcda-fe2345678901', name: 'Northern Cardinal' },
-];
-
-const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
+const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
   const { user } = useAuth();
-  const [speciesList, setSpeciesList] = useState<Species[]>(defaultSpecies);
-  const [speciesId, setSpeciesId] = useState('');
+  // speciesList and speciesId not needed for quest entry
   const [file, setFile] = useState<File | null>(null);
   const [privacy, setPrivacy] = useState<'public' | 'friends' | 'private'>('public');
   // For thumbnail generation
@@ -58,16 +57,14 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
-    supabase.from('species').select('*').then(({ data }) => {
-      if (data && data.length > 0) setSpeciesList(data);
-    });
+    // No species fetch needed for quest entry
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!croppedBlob || !speciesId) {
-      setError('Please select a species and a photo.');
+    if (!croppedBlob) {
+      setError('Please select a photo.');
       return;
     }
     if (croppedBlob.size > 5 * 1024 * 1024) {
@@ -77,36 +74,24 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
     setUploading(true);
     try {
       // Upload full image
-      const filePath = `${user?.id}/${speciesId}/${Date.now()}_cropped.jpg`;
+      const filePath = `${user?.id}/quest_${questId}/${Date.now()}_cropped.jpg`;
       const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, croppedBlob);
       if (uploadError) throw uploadError;
       // Generate and upload thumbnail
       const thumbBlob = await createThumbnail(croppedBlob, 360);
-      const thumbPath = `${user?.id}/${speciesId}/${Date.now()}_thumb.jpg`;
+      const thumbPath = `${user?.id}/quest_${questId}/${Date.now()}_thumb.jpg`;
       const { error: thumbError } = await supabase.storage.from('photos').upload(thumbPath, thumbBlob);
       if (thumbError) throw thumbError;
-      // Store both paths in DB
-      const url = filePath;
-      const thumbnail_url = thumbPath;
-      // Check if this is the user's first photo for this species
-      const { data: existingPhotos } = await supabase
-        .from('photos')
-        .select('id')
-        .eq('user_id', user?.id)
-        .eq('species_id', speciesId);
-      const isFirst = !existingPhotos || existingPhotos.length === 0;
-      await supabase.from('photos').insert({
+      // Store entry in quest_entries table
+      await supabase.from('quest_entries').insert({
         user_id: user?.id,
-        species_id: speciesId,
-        url, // full image path
-        thumbnail_url, // thumbnail path
-        privacy,
-        is_top: isFirst,
+        quest_id: questId,
+        image_path: filePath,
+        thumbnail_path: thumbPath,
       });
       setFile(null);
       setCroppedBlob(null);
       setShowCropper(false);
-      setSpeciesId('');
       setPrivacy('public');
       if (onUpload) onUpload();
     } catch (err: any) {
@@ -119,20 +104,7 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
     <Paper elevation={0} sx={{ p: { xs: 1, sm: 2 }, width: '100%', background: 'transparent' }}>
       <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
         <Stack spacing={2}>
-          <FormControl fullWidth required>
-            <InputLabel id="species-label">Species</InputLabel>
-            <Select
-              labelId="species-label"
-              value={speciesId}
-              label="Species"
-              onChange={e => setSpeciesId(e.target.value)}
-            >
-              <MenuItem value=""><em>Select species</em></MenuItem>
-              {speciesList.map(s => (
-                <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {/* No species selection for quest entry */}
           <FormControl fullWidth required>
             <Button
               variant="outlined"
@@ -189,6 +161,9 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
             <Button type="submit" variant="contained" color="primary" disabled={uploading} sx={{ minWidth: 120 }}>
               {uploading ? <CircularProgress size={20} /> : 'Upload'}
             </Button>
+            {onCancel && (
+              <Button onClick={onCancel} disabled={uploading} variant="outlined">Cancel</Button>
+            )}
             {error && <FormHelperText error>{error}</FormHelperText>}
           </Box>
         </Stack>
