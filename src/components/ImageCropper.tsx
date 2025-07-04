@@ -66,7 +66,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ file, onCropped, onCancel }
       sx={{
         position: 'relative',
         width: 1,
-        maxWidth: 400,
+        maxWidth: 600,
         mx: 'auto',
         background: '#222',
         borderRadius: 2,
@@ -77,7 +77,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ file, onCropped, onCancel }
         alignItems: 'center',
       }}
     >
-      <Box sx={{ position: 'relative', width: 1, maxWidth: 360, height: 0, paddingTop: '100%' }}>
+      <Box sx={{ position: 'relative', width: 1, maxWidth: 520, height: 0, paddingTop: '100%' }}>
         {imageUrl && (
           <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
             <Cropper

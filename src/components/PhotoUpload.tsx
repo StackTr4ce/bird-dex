@@ -132,7 +132,7 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
             <FormHelperText>Select a photo to upload (max 5MB)</FormHelperText>
           </FormControl>
           {showCropper && file && (
-            <Box sx={{ my: 2, mx: 'auto', width: 320, maxWidth: '100%' }}>
+            <Box sx={{ my: 2, mx: 'auto', width: 1, maxWidth: 600 }}>
               <ImageCropper
                 file={file}
                 onCropped={blob => {
