@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import Cropper from 'react-easy-crop';
+import { Box, Button, Stack } from '@mui/material';
 
 interface ImageCropperProps {
   file: File;
@@ -61,26 +62,46 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ file, onCropped, onCancel }
   };
 
   return (
-    <div style={{ position: 'relative', width: 300, height: 350, background: '#222', zIndex: 1000 }}>
-      <div style={{ position: 'relative', width: 300, height: 300 }}>
+    <Box
+      sx={{
+        position: 'relative',
+        width: 1,
+        maxWidth: 400,
+        mx: 'auto',
+        background: '#222',
+        borderRadius: 2,
+        p: 2,
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
+      <Box sx={{ position: 'relative', width: 1, maxWidth: 360, height: 0, paddingTop: '100%' }}>
         {imageUrl && (
-          <Cropper
-            image={imageUrl}
-            crop={crop}
-            zoom={zoom}
-            aspect={1}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-            style={{ containerStyle: { width: '100%', height: '100%' } }}
-          />
+          <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+            <Cropper
+              image={imageUrl}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+              style={{ containerStyle: { width: '100%', height: '100%' } }}
+            />
+          </Box>
         )}
-      </div>
-      <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center', gap: 16 }}>
-        <button type="button" onClick={handleCrop} style={{ zIndex: 1100 }}>Crop & Use</button>
-        <button type="button" onClick={onCancel} style={{ marginLeft: 8, zIndex: 1100 }}>Cancel</button>
-      </div>
-    </div>
+      </Box>
+      <Stack direction="row" spacing={2} sx={{ mt: 2, width: 1, justifyContent: 'center' }}>
+        <Button variant="contained" color="primary" onClick={handleCrop} sx={{ flex: 1, minWidth: 0 }}>
+          Crop & Use
+        </Button>
+        <Button variant="outlined" color="secondary" onClick={onCancel} sx={{ flex: 1, minWidth: 0 }}>
+          Cancel
+        </Button>
+      </Stack>
+    </Box>
   );
 };
 
