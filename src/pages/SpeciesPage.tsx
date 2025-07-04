@@ -1,5 +1,9 @@
 
 import { useState, useEffect } from 'react';
+import { Box, IconButton, Tooltip, Typography, Paper, CircularProgress } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
@@ -42,6 +46,22 @@ const SpeciesPage = () => {
   }, [user, speciesId, updating]);
 
   const setAsTopPhoto = async (photoId: string) => {
+  const deletePhoto = async (photoId: string) => {
+    if (!user) return;
+    setUpdating(true);
+    // Delete from Supabase Storage (optional: if you want to remove the file itself)
+    // First, get the photo URL and extract the path
+    const photo = photos.find(p => p.id === photoId);
+    if (photo) {
+      const url = new URL(photo.url);
+      const path = url.pathname.replace(/^\//, '');
+      await supabase.storage.from('photos').remove([path]);
+    }
+    // Delete from DB
+    await supabase.from('photos').delete().eq('id', photoId);
+    setUpdating(false);
+    setPhotos(photos => photos.filter(p => p.id !== photoId));
+  };
     if (!user || !speciesId) return;
     setUpdating(true);
     // Set all user's photos for this species to is_top = false, then set selected to true
@@ -59,32 +79,75 @@ const SpeciesPage = () => {
   };
 
   return (
-    <div>
-      <h1>Species: {speciesName}</h1>
-      <p>Manage your photos for this species. Select your top photo below.</p>
+    <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Typography variant="h4" fontWeight={700} gutterBottom>
+        Species: {speciesName}
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary">
+        Manage your photos for this species. Select your top photo below.
+      </Typography>
       {loading ? (
-        <div>Loading...</div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+          <CircularProgress />
+        </Box>
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 24 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, minmax(180px, 1fr))',
+              sm: 'repeat(3, minmax(220px, 1fr))',
+              md: 'repeat(4, minmax(260px, 1fr))',
+              lg: 'repeat(4, minmax(300px, 1fr))',
+              xl: 'repeat(6, minmax(320px, 1fr))',
+            },
+            gap: 0.5,
+            mt: 1,
+            width: '100%',
+            alignItems: 'stretch',
+          }}
+        >
           {photos.length === 0 ? (
-            <div>No photos uploaded for this species.</div>
+            <Typography color="text.secondary">No photos uploaded for this species.</Typography>
           ) : (
             photos.map(photo => (
-              <div key={photo.id} style={{ border: photo.is_top ? '2px solid #0077ff' : '1px solid #ccc', borderRadius: 8, padding: 8, background: '#fff', position: 'relative' }}>
-                <img src={photo.url} alt="Bird" style={{ width: 200, height: 200, objectFit: 'cover', borderRadius: 4 }} />
-                {photo.is_top && <div style={{ position: 'absolute', top: 8, left: 8, background: '#0077ff', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 12 }}>Top Photo</div>}
-                <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>Uploaded: {new Date(photo.created_at).toLocaleString()}</div>
-                {!photo.is_top && (
-                  <button onClick={() => setAsTopPhoto(photo.id)} disabled={updating} style={{ marginTop: 8 }}>
-                    Set as Top Photo
-                  </button>
-                )}
-              </div>
+              <Paper key={photo.id} elevation={photo.is_top ? 6 : 2} sx={{ position: 'relative', border: photo.is_top ? '2px solid #1976d2' : '1px solid #444', borderRadius: 3, p: 0, background: 'background.paper', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'stretch' }}>
+                <Box sx={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', minHeight: 0 }}>
+                  <img src={photo.url} alt="Bird" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                  <Box sx={{ position: 'absolute', top: 6, right: 6, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5, zIndex: 2 }}>
+                    <Tooltip title="Delete Photo">
+                      <IconButton
+                        size="small"
+                        sx={{ background: 'rgba(0,0,0,0.5)', color: '#fff', mb: 0.5, '&:hover': { background: 'error.main' } }}
+                        onClick={() => deletePhoto(photo.id)}
+                        disabled={updating}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={photo.is_top ? 'This is your top photo' : 'Set as Top Photo'}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          sx={{ background: photo.is_top ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.5)', color: '#fff', boxShadow: photo.is_top ? 2 : 0, '&:hover': { background: 'primary.dark' }, mt: 0.5 }}
+                          onClick={() => !photo.is_top && setAsTopPhoto(photo.id)}
+                          disabled={updating || photo.is_top}
+                        >
+                          {photo.is_top ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </Box>
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                  Uploaded: {new Date(photo.created_at).toLocaleString()}
+                </Typography>
+              </Paper>
             ))
           )}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 
