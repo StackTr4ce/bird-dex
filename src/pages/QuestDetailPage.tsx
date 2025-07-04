@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Box, Typography, Paper, CircularProgress, Grid, Button, Stack, Avatar, Chip
+  Box, Typography, Paper, CircularProgress, Button, Stack, Avatar, Chip
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { supabase } from '../supabaseClient';
 import SelectPhotoModal from '../components/SelectPhotoModal';
 import SupabaseImage from '../components/SupabaseImage';
@@ -19,13 +20,19 @@ interface Quest {
 }
 
 
+
 interface Entry {
   id: string;
   user_id: string;
   quest_id: string;
   photo_id: string;
   created_at: string;
-  // votes: number; // Not present in schema, remove if not used
+}
+
+
+interface UserProfile {
+  user_id: string;
+  display_name: string;
 }
 
 interface Photo {
@@ -46,6 +53,8 @@ const QuestDetailPage = () => {
   const [showSelectModal, setShowSelectModal] = useState(false);
   const [myEntry, setMyEntry] = useState<Entry | null>(null);
   const [photoMap, setPhotoMap] = useState<Record<string, Photo>>({});
+  const [userProfileMap, setUserProfileMap] = useState<Record<string, string>>({});
+  const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchQuestAndEntries = async () => {
@@ -67,6 +76,34 @@ const QuestDetailPage = () => {
         setPhotoMap(map);
       } else {
         setPhotoMap({});
+      }
+      // Fetch all user display names for these entries
+      const userIds = Array.from(new Set((entriesData || []).map((e: Entry) => e.user_id)));
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('user_profiles')
+          .select('user_id,display_name')
+          .in('user_id', userIds);
+        const profileMap: Record<string, string> = {};
+        (profilesData || []).forEach((p: UserProfile) => { profileMap[p.user_id] = p.display_name; });
+        setUserProfileMap(profileMap);
+      } else {
+        setUserProfileMap({});
+      }
+      // Fetch vote counts for each entry (client-side count)
+      const entryIds = (entriesData || []).map((e: Entry) => e.id);
+      if (entryIds.length > 0) {
+        const { data: votesData } = await supabase
+          .from('quest_votes')
+          .select('entry_id')
+          .in('entry_id', entryIds);
+        const voteMap: Record<string, number> = {};
+        (votesData || []).forEach((v: { entry_id: string }) => {
+          voteMap[v.entry_id] = (voteMap[v.entry_id] || 0) + 1;
+        });
+        setVoteCounts(voteMap);
+      } else {
+        setVoteCounts({});
       }
       setLoading(false);
     };
@@ -159,21 +196,27 @@ const QuestDetailPage = () => {
       <Grid container spacing={2}>
         {entries.filter(e => !myEntry || e.id !== myEntry.id).map(entry => (
           photoMap[entry.photo_id] && (
-            <Grid item key={entry.id} xs={12} sm={6} md={4}>
+            <Grid xs={12} sm={6} md={4} key={entry.id}>
               <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
                 <SupabaseImage path={photoMap[entry.photo_id].url} width={200} height={200} style={{ borderRadius: 8 }} />
-                <Box sx={{ mt: 1 }}>
-                  <Button
-                    variant={votedEntryId === entry.id ? 'contained' : 'outlined'}
-                    color={votedEntryId === entry.id ? 'primary' : 'inherit'}
-                    size="small"
-                    disabled={submittingVote}
-                    onClick={() => handleVote(entry.id)}
-                    sx={{ mt: 1 }}
-                  >
-                    {votedEntryId === entry.id ? 'Voted' : 'Vote'}
-                  </Button>
+                <Box sx={{ mt: 1, mb: 1 }}>
+                  <Typography variant="subtitle2">
+                    {userProfileMap[entry.user_id] || 'Unknown User'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {voteCounts[entry.id] || 0} vote{(voteCounts[entry.id] || 0) === 1 ? '' : 's'}
+                  </Typography>
                 </Box>
+                <Button
+                  variant={votedEntryId === entry.id ? 'contained' : 'outlined'}
+                  color={votedEntryId === entry.id ? 'primary' : 'inherit'}
+                  size="small"
+                  disabled={submittingVote}
+                  onClick={() => handleVote(entry.id)}
+                  sx={{ mt: 1 }}
+                >
+                  {votedEntryId === entry.id ? 'Voted' : 'Vote'}
+                </Button>
               </Paper>
             </Grid>
           )

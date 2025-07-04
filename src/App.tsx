@@ -7,9 +7,11 @@ import FriendsPage from './pages/FriendsPage';
 import FeedPage from './pages/FeedPage';
 import MyUploadsPage from './pages/MyUploadsPage';
 import QuestsPage from './pages/QuestsPage';
+
 import QuestsAdminPage from './pages/QuestsAdminPage';
 import QuestDetailPage from './pages/QuestDetailPage';
 import LoginPage from './pages/LoginPage';
+import UserProfilePage from './pages/UserProfilePage';
 import NavBar from './components/NavBar';
 
 import CssBaseline from '@mui/material/CssBaseline';
@@ -85,6 +87,7 @@ function App() {
             <Route path="/quests/:questId" element={<QuestDetailPage />} />
             <Route path="/quests-admin" element={<QuestsAdminPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/profile" element={<UserProfilePage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Container>

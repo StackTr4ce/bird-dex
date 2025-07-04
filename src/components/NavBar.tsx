@@ -67,9 +67,14 @@ const NavBar = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {user ? (
             <>
-              <Typography variant="body2" sx={{ mr: 1, whiteSpace: 'nowrap', fontWeight: 500, color: 'text.secondary' }}>
+              <Button
+                component={Link}
+                to="/profile"
+                color="inherit"
+                sx={{ textTransform: 'none', fontWeight: 500, mr: 1 }}
+              >
                 Signed in as {user.email}
-              </Typography>
+              </Button>
               <Button variant="outlined" color="primary" size="small" onClick={signOut} disabled={loading} sx={{ ml: 1, fontWeight: 700 }}>
                 Sign Out
               </Button>
