@@ -2,6 +2,20 @@ import { useState, useEffect } from 'react';
 import ImageCropper from './ImageCropper';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
+import {
+  Box,
+  Paper,
+  Typography,
+  Stack,
+  Button,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  FormHelperText,
+  CircularProgress,
+  TextField,
+} from '@mui/material';
 
 interface Species {
   id: string;
@@ -77,57 +91,84 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ margin: '1rem 0' }}>
-      <div>
-        <label>Species</label>
-        <select value={speciesId} onChange={e => setSpeciesId(e.target.value)} required>
-          <option value="">Select species</option>
-          {speciesList.map(s => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label>Photo</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={e => {
-            const f = e.target.files?.[0] || null;
-            setFile(f);
-            setCroppedBlob(null);
-            if (f) setShowCropper(true);
-          }}
-          required
-        />
-      </div>
-      {showCropper && file && (
-        <div style={{ margin: '1rem 0' }}>
-          <ImageCropper
-            file={file}
-            onCropped={blob => {
-              setCroppedBlob(blob);
-              setShowCropper(false);
-            }}
-            onCancel={() => {
-              setShowCropper(false);
-              setFile(null);
-              setCroppedBlob(null);
-            }}
-          />
-        </div>
-      )}
-      <div>
-        <label>Privacy</label>
-        <select value={privacy} onChange={e => setPrivacy(e.target.value as any)}>
-          <option value="public">Public</option>
-          <option value="friends">Friends Only</option>
-          <option value="private">Private</option>
-        </select>
-      </div>
-      <button type="submit" disabled={uploading}>Upload</button>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-    </form>
+    <Paper elevation={0} sx={{ p: { xs: 1, sm: 2 }, width: '100%', background: 'transparent' }}>
+      <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+        <Stack spacing={2}>
+          <FormControl fullWidth required>
+            <InputLabel id="species-label">Species</InputLabel>
+            <Select
+              labelId="species-label"
+              value={speciesId}
+              label="Species"
+              onChange={e => setSpeciesId(e.target.value)}
+            >
+              <MenuItem value=""><em>Select species</em></MenuItem>
+              {speciesList.map(s => (
+                <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth required>
+            <Button
+              variant="outlined"
+              component="label"
+              sx={{ width: '100%', justifyContent: 'flex-start', textTransform: 'none' }}
+              disabled={uploading}
+            >
+              {file ? file.name : 'Choose Photo'}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={e => {
+                  const f = e.target.files?.[0] || null;
+                  setFile(f);
+                  setCroppedBlob(null);
+                  if (f) setShowCropper(true);
+                }}
+                required
+              />
+            </Button>
+            <FormHelperText>Select a photo to upload (max 5MB)</FormHelperText>
+          </FormControl>
+          {showCropper && file && (
+            <Box sx={{ my: 2, mx: 'auto', width: 320, maxWidth: '100%' }}>
+              <ImageCropper
+                file={file}
+                onCropped={blob => {
+                  setCroppedBlob(blob);
+                  setShowCropper(false);
+                }}
+                onCancel={() => {
+                  setShowCropper(false);
+                  setFile(null);
+                  setCroppedBlob(null);
+                }}
+              />
+            </Box>
+          )}
+          <FormControl fullWidth>
+            <InputLabel id="privacy-label">Privacy</InputLabel>
+            <Select
+              labelId="privacy-label"
+              value={privacy}
+              label="Privacy"
+              onChange={e => setPrivacy(e.target.value as any)}
+            >
+              <MenuItem value="public">Public</MenuItem>
+              <MenuItem value="friends">Friends Only</MenuItem>
+              <MenuItem value="private">Private</MenuItem>
+            </Select>
+          </FormControl>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button type="submit" variant="contained" color="primary" disabled={uploading} sx={{ minWidth: 120 }}>
+              {uploading ? <CircularProgress size={20} /> : 'Upload'}
+            </Button>
+            {error && <FormHelperText error>{error}</FormHelperText>}
+          </Box>
+        </Stack>
+      </Box>
+    </Paper>
   );
 };
 

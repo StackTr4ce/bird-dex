@@ -1,40 +1,84 @@
+
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import './NavBar.css';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import Stack from '@mui/material/Stack';
+import HomeIcon from '@mui/icons-material/Home';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import GroupIcon from '@mui/icons-material/Group';
+import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import FlagIcon from '@mui/icons-material/Flag';
 
 const navLinks = [
-  { to: '/', label: 'Home' },
-  { to: '/grid', label: 'Photo Grid' },
-  { to: '/leaderboard', label: 'Leaderboard' },
-  { to: '/friends', label: 'Friends' },
-  { to: '/feed', label: 'Feed' },
-  { to: '/my-uploads', label: 'My Uploads' },
-  { to: '/quests', label: 'Quests' },
+  { to: '/', label: 'Home', icon: <HomeIcon sx={{ mr: 1 }} /> },
+  { to: '/grid', label: 'Photo Grid', icon: <GridOnIcon sx={{ mr: 1 }} /> },
+  { to: '/leaderboard', label: 'Leaderboard', icon: <EmojiEventsIcon sx={{ mr: 1 }} /> },
+  { to: '/friends', label: 'Friends', icon: <GroupIcon sx={{ mr: 1 }} /> },
+  { to: '/feed', label: 'Feed', icon: <DynamicFeedIcon sx={{ mr: 1 }} /> },
+  { to: '/my-uploads', label: 'My Uploads', icon: <CloudUploadIcon sx={{ mr: 1 }} /> },
+  { to: '/quests', label: 'Quests', icon: <FlagIcon sx={{ mr: 1 }} /> },
 ];
 
 const NavBar = () => {
   const location = useLocation();
   const { user, signOut, loading } = useAuth();
   return (
-    <nav className="navbar">
-      <ul>
-        {navLinks.map((link) => (
-          <li key={link.to} className={location.pathname === link.to ? 'active' : ''}>
-            <Link to={link.to}>{link.label}</Link>
-          </li>
-        ))}
-      </ul>
-      <div className="navbar-user">
-        {user ? (
-          <>
-            <span style={{ marginRight: 8 }}>Signed in as {user.email}</span>
-            <button onClick={signOut} disabled={loading}>Sign Out</button>
-          </>
-        ) : (
-          <Link to="/login">Login</Link>
-        )}
-      </div>
-    </nav>
+    <AppBar position="fixed" color="inherit" elevation={2} sx={{ zIndex: 1200, background: 'linear-gradient(90deg, #23262f 0%, #23262f 60%, #23262f 100%)' }}>
+      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', minHeight: 56 }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <IconButton edge="start" color="primary" sx={{ display: { xs: 'inline-flex', md: 'none' } }}>
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: 1, display: { xs: 'none', sm: 'block' }, color: 'primary.main', mr: 2 }}>
+            🐦 BirdDex
+          </Typography>
+          {navLinks.map((link) => (
+            <Button
+              key={link.to}
+              component={Link}
+              to={link.to}
+              color={location.pathname === link.to ? 'primary' : 'inherit'}
+              startIcon={link.icon}
+              sx={{
+                fontWeight: location.pathname === link.to ? 700 : 400,
+                display: { xs: 'none', md: 'inline-flex' },
+                textTransform: 'none',
+                letterSpacing: 0.5,
+                fontSize: 16,
+                borderBottom: location.pathname === link.to ? 2 : 0,
+                borderColor: 'primary.main',
+                borderRadius: 0,
+                px: 1.5,
+              }}
+            >
+              {link.label}
+            </Button>
+          ))}
+        </Stack>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {user ? (
+            <>
+              <Typography variant="body2" sx={{ mr: 1, whiteSpace: 'nowrap', fontWeight: 500, color: 'text.secondary' }}>
+                Signed in as {user.email}
+              </Typography>
+              <Button variant="outlined" color="primary" size="small" onClick={signOut} disabled={loading} sx={{ ml: 1, fontWeight: 700 }}>
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Button component={Link} to="/login" color="primary" variant="contained" size="small" sx={{ fontWeight: 700 }}>Login</Button>
+          )}
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 

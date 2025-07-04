@@ -4,14 +4,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
+import {
+  Box,
+  Card,
+  CardActionArea,
+  CardContent,
+  CardMedia,
+  CircularProgress,
+  Grid,
+  Typography,
+  Paper,
+} from '@mui/material';
 
-interface Photo {
-  id: string;
-  url: string;
-  species_id: string;
-  user_id: string;
-  created_at: string;
-}
+
 
 
 interface TopPhoto {
@@ -62,53 +67,78 @@ const PhotoGridPage = () => {
   }, [user]);
 
   return (
-    <div>
-      <h1>Photo Grid</h1>
-      <p>Your top bird photos for each unique species.</p>
-      <div style={{ fontWeight: 'bold', fontSize: 18, margin: '1rem 0' }}>
+    <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <Typography variant="h4" fontWeight={700} gutterBottom>
+        Photo Grid
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary">
+        Your top bird photos for each unique species.
+      </Typography>
+      <Paper elevation={2} sx={{ display: 'inline-block', px: 2, py: 1, my: 2, fontWeight: 600, fontSize: 18 }}>
         Score: {score} species
-      </div>
+      </Paper>
       {loading ? (
-        <div>Loading...</div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+          <CircularProgress />
+        </Box>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '1rem',
-          marginTop: '1.5rem',
-        }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, minmax(180px, 1fr))',
+              sm: 'repeat(3, minmax(220px, 1fr))',
+              md: 'repeat(4, minmax(260px, 1fr))',
+              lg: 'repeat(4, minmax(300px, 1fr))',
+              xl: 'repeat(6, minmax(320px, 1fr))',
+            },
+            gap: 3,
+            mt: 1,
+            width: '100%',
+            alignItems: 'start',
+          }}
+        >
           {topPhotos.length === 0 ? (
-            <div>No top photos found.</div>
+            <Box sx={{ gridColumn: '1/-1', textAlign: 'center' }}>
+              <Typography color="text.secondary">No top photos found.</Typography>
+            </Box>
           ) : (
             topPhotos.map(photo => (
-              <div
-                key={photo.id}
-                style={{
-                  border: '1px solid #eee',
-                  borderRadius: 4,
-                  padding: '12px',
-                  background: '#fff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  minWidth: 0,
-                  boxShadow: 'none',
-                  justifyContent: 'center',
-                }}
-                onClick={() => navigate(`/species/${photo.species_id}`)}
-                title={`View all photos for ${photo.species_name}`}
-              >
-                <div style={{ width: 160, height: 160, overflow: 'hidden', borderRadius: 4, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
-                  <img src={photo.url} alt={photo.species_name || 'Bird'} style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '1 / 1' }} />
-                </div>
-                <div style={{ fontWeight: 500, fontSize: 15, marginTop: 2, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{photo.species_name}</div>
-              </div>
+              <Box key={photo.id} sx={{ aspectRatio: '1 / 1', width: '100%', maxWidth: { xs: 220, sm: 260, md: 320, lg: 360 }, mx: 'auto' }}>
+                <Card
+                  sx={{ borderRadius: 3, boxShadow: 2, height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer' }}
+                  onClick={() => navigate(`/species/${photo.species_id}`)}
+                  title={`View all photos for ${photo.species_name}`}
+                >
+                  <Box sx={{ position: 'relative', width: '100%', height: 0, paddingTop: '100%' }}>
+                    <CardMedia
+                      component="img"
+                      image={photo.url}
+                      alt={photo.species_name || 'Bird'}
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: 2,
+                        background: '#eee',
+                      }}
+                    />
+                  </Box>
+                  <CardContent sx={{ p: 1, flexGrow: 1 }}>
+                    <Typography variant="subtitle1" fontWeight={600} align="center" noWrap>
+                      {photo.species_name}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Box>
             ))
           )}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 
