@@ -25,6 +25,7 @@ const navLinks = [
   { to: '/feed', label: 'Feed', icon: <DynamicFeedIcon sx={{ mr: 1 }} /> },
   { to: '/my-uploads', label: 'My Uploads', icon: <CloudUploadIcon sx={{ mr: 1 }} /> },
   { to: '/quests', label: 'Quests', icon: <FlagIcon sx={{ mr: 1 }} /> },
+  { to: '/quests-admin', label: 'Quests Admin', icon: <FlagIcon sx={{ mr: 1, color: 'secondary.main' }} /> },
 ];
 
 const NavBar = () => {
