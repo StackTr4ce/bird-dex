@@ -33,6 +33,25 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
   const [speciesId, setSpeciesId] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [privacy, setPrivacy] = useState<'public' | 'friends' | 'private'>('public');
+  // For thumbnail generation
+  async function createThumbnail(blob: Blob, size = 360): Promise<Blob> {
+    // Create an offscreen image and canvas
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new window.Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = URL.createObjectURL(blob);
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('No 2d context');
+    ctx.drawImage(img, 0, 0, size, size);
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('Failed to create thumbnail')), 'image/jpeg', 0.8);
+    });
+  }
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
@@ -57,12 +76,18 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
     }
     setUploading(true);
     try {
-      // Upload to Supabase Storage
+      // Upload full image
       const filePath = `${user?.id}/${speciesId}/${Date.now()}_cropped.jpg`;
-      const { data: uploadData, error: uploadError } = await supabase.storage.from('photos').upload(filePath, croppedBlob);
+      const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, croppedBlob);
       if (uploadError) throw uploadError;
-      // Store only the storage path in the DB
+      // Generate and upload thumbnail
+      const thumbBlob = await createThumbnail(croppedBlob, 360);
+      const thumbPath = `${user?.id}/${speciesId}/${Date.now()}_thumb.jpg`;
+      const { error: thumbError } = await supabase.storage.from('photos').upload(thumbPath, thumbBlob);
+      if (thumbError) throw thumbError;
+      // Store both paths in DB
       const url = filePath;
+      const thumbnail_url = thumbPath;
       // Check if this is the user's first photo for this species
       const { data: existingPhotos } = await supabase
         .from('photos')
@@ -73,7 +98,8 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
       await supabase.from('photos').insert({
         user_id: user?.id,
         species_id: speciesId,
-        url, // now just the storage path
+        url, // full image path
+        thumbnail_url, // thumbnail path
         privacy,
         is_top: isFirst,
       });

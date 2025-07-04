@@ -12,6 +12,7 @@ import { useAuth } from '../components/AuthProvider';
 interface Photo {
   id: string;
   url: string;
+  thumbnail_url?: string;
   is_top: boolean;
   created_at: string;
 }
@@ -36,7 +37,7 @@ const SpeciesPage = () => {
       // Get all user's photos for this species
       const { data: photoData } = await supabase
         .from('photos')
-        .select('id,url,is_top,created_at')
+        .select('id,url,thumbnail_url,is_top,created_at')
         .eq('user_id', user.id)
         .eq('species_id', speciesId)
         .order('created_at', { ascending: false });
@@ -80,7 +81,7 @@ const SpeciesPage = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ width: '100%', maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh', boxSizing: 'border-box', overflowX: 'hidden' }}>
       <Typography variant="h4" fontWeight={700} gutterBottom>
         Species: {speciesName}
       </Typography>
@@ -96,26 +97,28 @@ const SpeciesPage = () => {
           sx={{
             display: 'grid',
             gridTemplateColumns: {
-              xs: 'repeat(2, minmax(180px, 1fr))',
-              sm: 'repeat(3, minmax(220px, 1fr))',
-              md: 'repeat(4, minmax(260px, 1fr))',
-              lg: 'repeat(4, minmax(300px, 1fr))',
-              xl: 'repeat(6, minmax(320px, 1fr))',
+              xs: 'repeat(1, minmax(0, 1fr))',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(3, minmax(360px, 1fr))',
+              lg: 'repeat(4, minmax(360px, 1fr))',
+              xl: 'repeat(5, minmax(360px, 1fr))',
             },
-            gap: 0.5,
+            gap: 2,
             mt: 1,
             width: '100%',
             alignItems: 'stretch',
+            boxSizing: 'border-box',
+            overflowX: 'hidden',
           }}
         >
           {photos.length === 0 ? (
             <Typography color="text.secondary">No photos uploaded for this species.</Typography>
           ) : (
             photos.map(photo => (
-              <Paper key={photo.id} elevation={photo.is_top ? 6 : 2} sx={{ position: 'relative', border: photo.is_top ? '2px solid #1976d2' : '1px solid #444', borderRadius: 3, p: 0, background: 'background.paper', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'stretch' }}>
+              <Paper key={photo.id} elevation={photo.is_top ? 6 : 2} sx={{ position: 'relative', border: photo.is_top ? '2px solid #1976d2' : '1px solid #444', borderRadius: 3, p: 0, background: 'background.paper', width: '100%', maxWidth: 360, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'stretch', mx: 'auto' }}>
                 <Box sx={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', minHeight: 0 }}>
-                  {/* Generate a signed URL for private bucket, or use getPublicUrl for public bucket */}
-                  <SupabaseImage path={photo.url} alt="Bird" />
+                  {/* Always use SupabaseImage to generate a fresh signed URL for each photo */}
+                  <SupabaseImage path={photo.thumbnail_url || photo.url} alt={speciesName ? `${speciesName} photo` : 'Bird photo'} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
                   <Box sx={{ position: 'absolute', top: 6, right: 6, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5, zIndex: 2 }}>
                     <Tooltip title="Delete Photo">
                       <IconButton

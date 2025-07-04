@@ -7,14 +7,12 @@ import { useAuth } from '../components/AuthProvider';
 import {
   Box,
   Card,
-  CardActionArea,
   CardContent,
-  CardMedia,
   CircularProgress,
-  Grid,
   Typography,
   Paper,
 } from '@mui/material';
+import SupabaseImage from '../components/SupabaseImage';
 
 
 
@@ -22,6 +20,7 @@ import {
 interface TopPhoto {
   id: string;
   url: string;
+  thumbnail_url?: string;
   species_id: string;
   user_id: string;
   created_at: string;
@@ -46,7 +45,7 @@ const PhotoGridPage = () => {
       // Here, we assume 'is_top' boolean exists
       const { data, error } = await supabase
         .from('photos')
-        .select('id,url,species_id,user_id,created_at,species(name)')
+        .select('id,url,thumbnail_url,species_id,user_id,created_at,species(name)')
         .eq('user_id', user.id)
         .eq('is_top', true)
         .order('species_id', { ascending: true });
@@ -67,7 +66,7 @@ const PhotoGridPage = () => {
   }, [user]);
 
   return (
-    <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ width: '100%', maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh', boxSizing: 'border-box', overflowX: 'hidden' }}>
       <Typography variant="h4" fontWeight={700} gutterBottom>
         Photo Grid
       </Typography>
@@ -86,44 +85,52 @@ const PhotoGridPage = () => {
           sx={{
             display: 'grid',
             gridTemplateColumns: {
-              xs: 'repeat(2, minmax(180px, 1fr))',
-              sm: 'repeat(3, minmax(220px, 1fr))',
-              md: 'repeat(4, minmax(260px, 1fr))',
-              lg: 'repeat(4, minmax(300px, 1fr))',
-              xl: 'repeat(6, minmax(320px, 1fr))',
+              xs: 'repeat(1, minmax(0, 1fr))',
+              sm: 'repeat(2, minmax(0, 1fr))',
+              md: 'repeat(3, minmax(360px, 1fr))',
+              lg: 'repeat(4, minmax(360px, 1fr))',
+              xl: 'repeat(5, minmax(360px, 1fr))',
             },
-            gap: 3,
+            gap: 2,
             mt: 1,
             width: '100%',
             alignItems: 'start',
+            boxSizing: 'border-box',
+            overflowX: 'hidden',
           }}
         >
           {topPhotos.length === 0 ? (
-            <Box sx={{ gridColumn: '1/-1', textAlign: 'center' }}>
+            <Box sx={{
+              gridColumn: '1/-1',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 240,
+              textAlign: 'center',
+            }}>
               <Typography color="text.secondary">No top photos found.</Typography>
             </Box>
           ) : (
             topPhotos.map(photo => (
-              <Box key={photo.id} sx={{ aspectRatio: '1 / 1', width: '100%', maxWidth: { xs: 220, sm: 260, md: 320, lg: 360 }, mx: 'auto' }}>
+              <Box key={photo.id} sx={{ aspectRatio: '1 / 1', width: '100%', maxWidth: 360, mx: 'auto' }}>
                 <Card
                   sx={{ borderRadius: 3, boxShadow: 2, height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer' }}
                   onClick={() => navigate(`/species/${photo.species_id}`)}
                   title={`View all photos for ${photo.species_name}`}
                 >
                   <Box sx={{ position: 'relative', width: '100%', height: 0, paddingTop: '100%' }}>
-                    <CardMedia
-                      component="img"
-                      image={photo.url}
+                    <SupabaseImage
+                      path={photo.thumbnail_url || photo.url}
                       alt={photo.species_name || 'Bird'}
-                      sx={{
+                      style={{
                         position: 'absolute',
                         top: 0,
                         left: 0,
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
-                        borderRadius: 2,
-                        background: '#eee',
+                        borderRadius: 8,
+                        background: '#222',
                       }}
                     />
                   </Box>
