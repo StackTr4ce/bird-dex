@@ -30,10 +30,10 @@ const SpeciesPage = () => {
     setLoading(true);
     const fetchPhotos = async () => {
       // Get species name
-      const { data: speciesData, error: speciesError } = await supabase.from('species').select('name').eq('id', speciesId).maybeSingle();
+      const { data: speciesData } = await supabase.from('species').select('name').eq('id', speciesId).maybeSingle();
       setSpeciesName(speciesData?.name || '');
       // Get all user's photos for this species
-      const { data: photoData, error: photoError } = await supabase
+      const { data: photoData } = await supabase
         .from('photos')
         .select('id,url,is_top,created_at')
         .eq('user_id', user.id)
@@ -43,9 +43,8 @@ const SpeciesPage = () => {
       setLoading(false);
     };
     fetchPhotos();
-  }, [user, speciesId, updating]);
+  }, [user, speciesId]);
 
-  const setAsTopPhoto = async (photoId: string) => {
   const deletePhoto = async (photoId: string) => {
     if (!user) return;
     setUpdating(true);
@@ -62,9 +61,12 @@ const SpeciesPage = () => {
     setUpdating(false);
     setPhotos(photos => photos.filter(p => p.id !== photoId));
   };
+
+  const setAsTopPhoto = async (photoId: string) => {
     if (!user || !speciesId) return;
-    setUpdating(true);
-    // Set all user's photos for this species to is_top = false, then set selected to true
+    // Optimistically update UI only
+    setPhotos(photos => photos.map(p => ({ ...p, is_top: p.id === photoId })));
+    // Update DB in background
     await supabase
       .from('photos')
       .update({ is_top: false })
@@ -75,7 +77,7 @@ const SpeciesPage = () => {
       .update({ is_top: true })
       .eq('id', photoId)
       .eq('user_id', user.id);
-    setUpdating(false);
+    // No setUpdating or refetch
   };
 
   return (
