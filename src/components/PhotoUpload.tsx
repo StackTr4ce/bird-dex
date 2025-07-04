@@ -49,7 +49,7 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
     if (!ctx) throw new Error('No 2d context');
     ctx.drawImage(img, 0, 0, size, size);
     return new Promise((resolve, reject) => {
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error('Failed to create thumbnail')), 'image/jpeg', 0.8);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('Failed to create thumbnail')), 'image/jpeg', 0.92);
     });
   }
   const [error, setError] = useState<string | null>(null);
