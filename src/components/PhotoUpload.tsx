@@ -61,9 +61,8 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
       const filePath = `${user?.id}/${speciesId}/${Date.now()}_cropped.jpg`;
       const { data: uploadData, error: uploadError } = await supabase.storage.from('photos').upload(filePath, croppedBlob);
       if (uploadError) throw uploadError;
-      // Get a public or signed URL for the uploaded image
-      const { data: urlData } = await supabase.storage.from('photos').createSignedUrl(filePath, 60 * 60); // 1 hour
-      const url = urlData?.signedUrl || '';
+      // Store only the storage path in the DB
+      const url = filePath;
       // Check if this is the user's first photo for this species
       const { data: existingPhotos } = await supabase
         .from('photos')
@@ -74,7 +73,7 @@ const PhotoUpload = ({ onUpload }: { onUpload?: () => void }) => {
       await supabase.from('photos').insert({
         user_id: user?.id,
         species_id: speciesId,
-        url,
+        url, // now just the storage path
         privacy,
         is_top: isFirst,
       });

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Box, IconButton, Tooltip, Typography, Paper, CircularProgress } from '@mui/material';
+import SupabaseImage from '../components/SupabaseImage';
 import DeleteIcon from '@mui/icons-material/Delete';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
@@ -49,12 +50,10 @@ const SpeciesPage = () => {
     if (!user) return;
     setUpdating(true);
     // Delete from Supabase Storage (optional: if you want to remove the file itself)
-    // First, get the photo URL and extract the path
+    // Now, url is just the storage path
     const photo = photos.find(p => p.id === photoId);
     if (photo) {
-      const url = new URL(photo.url);
-      const path = url.pathname.replace(/^\//, '');
-      await supabase.storage.from('photos').remove([path]);
+      await supabase.storage.from('photos').remove([photo.url]);
     }
     // Delete from DB
     await supabase.from('photos').delete().eq('id', photoId);
@@ -115,7 +114,8 @@ const SpeciesPage = () => {
             photos.map(photo => (
               <Paper key={photo.id} elevation={photo.is_top ? 6 : 2} sx={{ position: 'relative', border: photo.is_top ? '2px solid #1976d2' : '1px solid #444', borderRadius: 3, p: 0, background: 'background.paper', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'stretch' }}>
                 <Box sx={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', minHeight: 0 }}>
-                  <img src={photo.url} alt="Bird" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+                  {/* Generate a signed URL for private bucket, or use getPublicUrl for public bucket */}
+                  <SupabaseImage path={photo.url} alt="Bird" />
                   <Box sx={{ position: 'absolute', top: 6, right: 6, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5, zIndex: 2 }}>
                     <Tooltip title="Delete Photo">
                       <IconButton
