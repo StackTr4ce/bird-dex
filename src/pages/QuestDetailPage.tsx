@@ -77,7 +77,7 @@ const QuestDetailPage = () => {
   useEffect(() => {
     const fetchVote = async () => {
       if (!user || !questId) return;
-      const { data } = await supabase.from('quest_votes').select('entry_id').eq('user_id', user.id).eq('quest_id', questId).single();
+      const { data } = await supabase.from('quest_votes').select('entry_id').eq('voter_id', user.id).eq('quest_id', questId).single();
       setVotedEntryId(data?.entry_id || null);
     };
     fetchVote();
@@ -86,8 +86,8 @@ const QuestDetailPage = () => {
   const handleVote = async (entryId: string) => {
     if (!user || submittingVote) return;
     setSubmittingVote(true);
-    // Upsert vote
-    await supabase.from('quest_votes').upsert({ user_id: user.id, quest_id: questId, entry_id: entryId }, { onConflict: 'user_id,quest_id' });
+    // Upsert vote using voter_id
+    await supabase.from('quest_votes').upsert({ voter_id: user.id, quest_id: questId, entry_id: entryId }, { onConflict: 'voter_id,quest_id' });
     setVotedEntryId(entryId);
     setSubmittingVote(false);
   };
