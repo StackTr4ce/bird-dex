@@ -31,6 +31,7 @@ function CenterMapOnMarker({ lat, lng }: { lat: number, lng: number }) {
 export default function PhotoDetailPage() {
   const { photoId } = useParams();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [speciesId, setSpeciesId] = useState<string | null>(null);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [locationText, setLocationText] = useState<string>('');
@@ -42,6 +43,7 @@ export default function PhotoDetailPage() {
   useEffect(() => {
     if (!photoId || typeof photoId !== 'string' || photoId.trim() === '') {
       setPhotoUrl(null);
+      setSpeciesId(null);
       setLat(null);
       setLng(null);
       setLocationText('');
@@ -50,17 +52,19 @@ export default function PhotoDetailPage() {
     }
     supabase
       .from('photos')
-      .select('url, lat, lng, description')
+      .select('url, lat, lng, description, species_id')
       .eq('id', photoId)
       .single()
       .then(async ({ data, error }) => {
         if (error || !data) {
           setPhotoUrl(null);
+          setSpeciesId(null);
           setLocationText('');
           setDescription('');
           return;
         }
         setPhotoUrl(data.url || null);
+        setSpeciesId(data.species_id || null);
         setLat(data.lat ?? null);
         setLng(data.lng ?? null);
         setDescription(data.description || '');
@@ -120,7 +124,12 @@ export default function PhotoDetailPage() {
     <Box sx={{ mx: 'auto', mt: 4, p: 2 }}>
       <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3 }}>
         <Box sx={{ flex: 1, minWidth: 0, maxWidth: 420, width: 420 }}>
-          <Paper elevation={2} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 320, height: '100%' }}>
+          <Paper elevation={2} sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', minHeight: 320, height: '100%' }}>
+            {speciesId && (
+              <Typography variant="h6" gutterBottom sx={{ width: '100%', textAlign: 'center', mb: 2 }}>
+                {speciesId}
+              </Typography>
+            )}
             {photoUrl ? (
               <SupabaseImage path={photoUrl} alt="Bird" style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }} />
             ) : (
