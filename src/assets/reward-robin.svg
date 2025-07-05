@@ -1,0 +1,28 @@
+<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgRed" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#ffb3b3"/>
+      <stop offset="100%" stop-color="#ff1a1a"/>
+    </radialGradient>
+  </defs>
+  <!-- Background circle -->
+  <!-- Minimal American Robin: body, wing, head, beak, eye, belly -->
+  <!-- Gray square background (behind diamond, visible at corners) -->
+  <rect x="5.5" y="5.5" width="39" height="39" fill="#b0bec5" fill-opacity="1"/>
+  <!-- Gold diamond background (touches SVG borders) -->
+  <rect x="7.32" y="7.32" width="35.36" height="35.36" fill="#FFD700" fill-opacity="0.95" transform="rotate(45 25 25)"/>
+  <g>
+    <!-- Body -->
+    <ellipse cx="19.5" cy="30" rx="15.5" ry="13" fill="#6d4c1b"/>
+    <!-- Belly -->
+    <ellipse cx="19.5" cy="37" rx="10.5" ry="6.2" fill="#ff9800"/>
+    <!-- Wing -->
+    <ellipse cx="12.5" cy="30" rx="8.5" ry="6.2" fill="#8d6742"/>
+    <!-- Head -->
+    <circle cx="35" cy="16.5" r="7.5" fill="#222"/>
+    <!-- Eye -->
+    <circle cx="37.5" cy="16.5" r="1.2" fill="#fff"/>
+    <!-- Beak (not cut off) -->
+    <polygon points="42,17.5 48,16.5 42,15.5" fill="#ffd700"/>
+  </g>
+</svg>
