@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ImageCropper from './ImageCropper';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
@@ -29,6 +29,7 @@ interface PhotoUploadProps {
 
 const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
   const { user } = useAuth();
+  const [speciesList, setSpeciesList] = useState<string[]>([]);
   const [speciesId, setSpeciesId] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [privacy, setPrivacy] = useState<'public' | 'friends' | 'private'>('public');
