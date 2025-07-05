@@ -31,8 +31,8 @@ function CenterMapOnMarker({ lat, lng }: { lat: number, lng: number }) {
 export default function PhotoDetailPage() {
   const { photoId } = useParams();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [lat, setLat] = useState<number | null>(42.3601); // Example: Boston
-  const [lng, setLng] = useState<number | null>(-71.0589);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [locationText, setLocationText] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [description, setDescription] = useState<string>('');
@@ -65,8 +65,8 @@ export default function PhotoDetailPage() {
           return;
         }
         setPhotoUrl(data.url || null);
-        setLat(data.lat ?? 42.3601);
-        setLng(data.lng ?? -71.0589);
+        setLat(data.lat ?? null);
+        setLng(data.lng ?? null);
         setDescription(data.description || '');
         setLoading(false);
         // Reverse geocoding to get a human-friendly address
@@ -137,7 +137,8 @@ export default function PhotoDetailPage() {
         </Box>
         <Box sx={{ flex: 1, minWidth: 0, maxWidth: 420, width: 420 }}>
           <Paper elevation={2} sx={{ p: 2, minHeight: 320, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            {lat && lng && (
+            <Typography variant="h6" gutterBottom>Map Location</Typography>
+            {lat != null && lng != null ? (
               <Box sx={{ width: '100%', height: { xs: 250, md: 320 }, borderRadius: 2, overflow: 'hidden', mb: 1, minWidth: 0, minHeight: 250, maxHeight: 320 }}>
                 <MapContainer
                   center={[lat, lng]}
@@ -172,15 +173,23 @@ export default function PhotoDetailPage() {
                   </Marker>
                 </MapContainer>
               </Box>
+            ) : (
+              <Box sx={{ width: '100%', height: { xs: 250, md: 320 }, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, background: '#f5f5f5', mb: 1, minWidth: 0, minHeight: 250, maxHeight: 320 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No Location Set
+                </Typography>
+              </Box>
             )}
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mt: 2, width: '100%', minHeight: 28, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', display: 'block' }}
-              title={locationText}
-            >
-              {locationText.length > 30 ? locationText.slice(0, 30) + '…' : locationText}
-            </Typography>
+            {lat != null && lng != null && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 2, width: '100%', minHeight: 28, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', display: 'block' }}
+                title={locationText}
+              >
+                {locationText.length > 30 ? locationText.slice(0, 30) + '…' : locationText}
+              </Typography>
+            )}
           </Paper>
         </Box>
       </Box>
@@ -208,24 +217,58 @@ export default function PhotoDetailPage() {
                 minRows={2}
                 maxRows={6}
               />
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  label="Latitude"
-                  type="number"
-                  value={lat ?? ''}
-                  onChange={e => setLat(e.target.value === '' ? null : parseFloat(e.target.value))}
-                  inputProps={{ step: 'any' }}
-                  sx={{ width: 180 }}
-                />
-                <TextField
-                  label="Longitude"
-                  type="number"
-                  value={lng ?? ''}
-                  onChange={e => setLng(e.target.value === '' ? null : parseFloat(e.target.value))}
-                  inputProps={{ step: 'any' }}
-                  sx={{ width: 180 }}
-                />
-              </Stack>
+              {/* If no lat/lng, show Set in Map button */}
+              {lat == null || lng == null ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={async () => {
+                      // Try to get current location, fallback to Chicago
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          (pos) => {
+                            setLat(pos.coords.latitude);
+                            setLng(pos.coords.longitude);
+                          },
+                          () => {
+                            // Fallback to Chicago, IL
+                            setLat(41.8781);
+                            setLng(-87.6298);
+                          },
+                          { enableHighAccuracy: true, timeout: 5000 }
+                        );
+                      } else {
+                        setLat(41.8781);
+                        setLng(-87.6298);
+                      }
+                    }}
+                  >
+                    Set in Map
+                  </Button>
+                  <Typography variant="body2" color="text.secondary">
+                    Set your location using your device or defaults to Chicago, IL.
+                  </Typography>
+                </Box>
+              ) : (
+                <Stack direction="row" spacing={2}>
+                  <TextField
+                    label="Latitude"
+                    type="number"
+                    value={lat ?? ''}
+                    onChange={e => setLat(e.target.value === '' ? null : parseFloat(e.target.value))}
+                    inputProps={{ step: 'any' }}
+                    sx={{ width: 180 }}
+                  />
+                  <TextField
+                    label="Longitude"
+                    type="number"
+                    value={lng ?? ''}
+                    onChange={e => setLng(e.target.value === '' ? null : parseFloat(e.target.value))}
+                    inputProps={{ step: 'any' }}
+                    sx={{ width: 180 }}
+                  />
+                </Stack>
+              )}
               <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                 <Button
                   variant="contained"
