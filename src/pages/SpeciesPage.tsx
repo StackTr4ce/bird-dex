@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Box, IconButton, Tooltip, Typography, Paper, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
 // Responsive grid columns logic (copied from PhotoGridPage)
 const useGridColumns = () => {
   const theme = useTheme();

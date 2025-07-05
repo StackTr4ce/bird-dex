@@ -34,7 +34,6 @@ export default function PhotoDetailPage() {
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [locationText, setLocationText] = useState<string>('');
-  const [loading, setLoading] = useState(true);
   const [description, setDescription] = useState<string>('');
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,10 +46,8 @@ export default function PhotoDetailPage() {
       setLng(null);
       setLocationText('');
       setDescription('');
-      setLoading(false);
       return;
     }
-    setLoading(true);
     supabase
       .from('photos')
       .select('url, lat, lng, description')
@@ -59,7 +56,6 @@ export default function PhotoDetailPage() {
       .then(async ({ data, error }) => {
         if (error || !data) {
           setPhotoUrl(null);
-          setLoading(false);
           setLocationText('');
           setDescription('');
           return;
@@ -68,7 +64,6 @@ export default function PhotoDetailPage() {
         setLat(data.lat ?? null);
         setLng(data.lng ?? null);
         setDescription(data.description || '');
-        setLoading(false);
         // Reverse geocoding to get a human-friendly address
         if (data.lat != null && data.lng != null) {
           try {
