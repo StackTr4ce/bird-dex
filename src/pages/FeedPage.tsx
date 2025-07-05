@@ -362,13 +362,6 @@ const FeedPage = () => {
         />
       </Tabs>
 
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        {currentTab === 'friends' 
-          ? "See your friends' latest bird photo uploads"
-          : "View all your uploaded bird photos and comments"
-        }
-      </Typography>
-
       {photos.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="h6" color="text.secondary">

@@ -197,10 +197,6 @@ const HomePage = () => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 2, sm: 3 } }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
-        Welcome back!
-      </Typography>
-
       {/* Top Row - Stats and Awards */}
       <Box sx={{ 
         display: 'grid', 
