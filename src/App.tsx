@@ -17,7 +17,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
 
@@ -42,20 +41,13 @@ const darkTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: [
-      'Inter',
-      'Montserrat',
-      'Roboto',
-      'Segoe UI',
-      'Arial',
-      'sans-serif',
-    ].join(','),
-    h1: { fontFamily: 'Montserrat, Inter, Roboto, Arial, sans-serif', fontWeight: 800 },
-    h2: { fontFamily: 'Montserrat, Inter, Roboto, Arial, sans-serif', fontWeight: 700 },
-    h3: { fontFamily: 'Montserrat, Inter, Roboto, Arial, sans-serif', fontWeight: 700 },
-    h4: { fontFamily: 'Montserrat, Inter, Roboto, Arial, sans-serif', fontWeight: 700 },
-    h5: { fontFamily: 'Montserrat, Inter, Roboto, Arial, sans-serif', fontWeight: 600 },
-    h6: { fontFamily: 'Montserrat, Inter, Roboto, Arial, sans-serif', fontWeight: 600 },
+    fontFamily: 'Inter, Montserrat, Roboto, Arial, sans-serif',
+    h1: { fontFamily: 'Inter, Montserrat, Roboto, Arial, sans-serif', fontWeight: 800 },
+    h2: { fontFamily: 'Inter, Montserrat, Roboto, Arial, sans-serif', fontWeight: 700 },
+    h3: { fontFamily: 'Inter, Montserrat, Roboto, Arial, sans-serif', fontWeight: 700 },
+    h4: { fontFamily: 'Inter, Montserrat, Roboto, Arial, sans-serif', fontWeight: 700 },
+    h5: { fontFamily: 'Inter, Montserrat, Roboto, Arial, sans-serif', fontWeight: 600 },
+    h6: { fontFamily: 'Inter, Montserrat, Roboto, Arial, sans-serif', fontWeight: 600 },
     button: { fontFamily: 'Inter, Montserrat, Roboto, Arial, sans-serif', fontWeight: 600 },
   },
 });
