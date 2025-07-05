@@ -13,6 +13,7 @@ import QuestDetailPage from './pages/QuestDetailPage';
 import LoginPage from './pages/LoginPage';
 import UserProfilePage from './pages/UserProfilePage';
 import NavBar from './components/NavBar';
+import { AdminProvider, useAdmin } from './components/AdminProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import CssBaseline from '@mui/material/CssBaseline';
@@ -59,97 +60,108 @@ fontLink.rel = 'stylesheet';
 fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@600;700;800&display=swap';
 document.head.appendChild(fontLink);
 
+// Only renders children if user is admin, otherwise redirects to home
+function AdminOnly({ children }: { children: React.ReactNode }) {
+  const { isAdmin } = useAdmin();
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <Router>
-        <NavBar />
-        <Routes>
-          {/* Full-width routes (outside Container) */}
-          <Route path="/grid" element={
-            <ProtectedRoute>
-              <PhotoGridPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* Constrained routes (inside Container) */}
-          <Route path="/" element={
-            <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-              <HomePage />
-            </Container>
-          } />
-          <Route path="/login" element={
-            <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-              <LoginPage />
-            </Container>
-          } />
-          <Route path="/species/:speciesId" element={
-            <ProtectedRoute>
+      <AdminProvider>
+        <Router>
+          <NavBar />
+          <Routes>
+            {/* Full-width routes (outside Container) */}
+            <Route path="/grid" element={
+              <ProtectedRoute>
+                <PhotoGridPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Constrained routes (inside Container) */}
+            <Route path="/" element={
               <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <SpeciesPage />
+                <HomePage />
               </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="/leaderboard" element={
-            <ProtectedRoute>
+            } />
+            <Route path="/login" element={
               <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <LeaderboardPage />
+                <LoginPage />
               </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="/friends" element={
-            <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <FriendsPage />
-              </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="/feed" element={
-            <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <FeedPage />
-              </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="/my-uploads" element={
-            <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <MyUploadsPage />
-              </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="/quests" element={
-            <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <QuestsPage />
-              </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="/quests/:questId" element={
-            <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <QuestDetailPage />
-              </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="/quests-admin" element={
-            <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <QuestsAdminPage />
-              </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
-                <UserProfilePage />
-              </Container>
-            </ProtectedRoute>
-          } />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
+            } />
+            <Route path="/species/:speciesId" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                  <SpeciesPage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/leaderboard" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                  <LeaderboardPage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/friends" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                  <FriendsPage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/feed" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                  <FeedPage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/my-uploads" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                  <MyUploadsPage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/quests" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                  <QuestsPage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/quests/:questId" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                  <QuestDetailPage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/quests-admin" element={
+              <ProtectedRoute>
+                <AdminOnly>
+                  <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                    <QuestsAdminPage />
+                  </Container>
+                </AdminOnly>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
+                  <UserProfilePage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+      </AdminProvider>
     </ThemeProvider>
   );
 }

@@ -19,6 +19,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FlagIcon from '@mui/icons-material/Flag';
 import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, Avatar, Tooltip } from '@mui/material';
 import { useState } from 'react';
+import { useAdmin } from './AdminProvider';
 
 const navLinks = [
   { to: '/', label: 'Home', icon: <HomeIcon sx={{ mr: 1 }} />, requiresAuth: false },
@@ -36,8 +37,12 @@ const NavBar = () => {
   const { user, signOut, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Filter navigation links based on authentication status
-  const visibleNavLinks = navLinks.filter(link => !link.requiresAuth || user);
+  const { isAdmin } = useAdmin();
+  // Filter navigation links based on authentication status and admin status for Quests Admin
+  const visibleNavLinks = navLinks.filter(link => {
+    if (link.to === '/quests-admin') return !!user && isAdmin;
+    return !link.requiresAuth || !!user;
+  });
 
   const handleMobileMenuToggle = () => {
     setMobileMenuOpen(!mobileMenuOpen);
