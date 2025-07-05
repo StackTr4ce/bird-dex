@@ -1,0 +1,267 @@
+import { Box, Typography, Paper, TextField, Button, Stack, IconButton, Tooltip } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvent, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { supabase } from '../supabaseClient';
+import SupabaseImage from '../components/SupabaseImage';
+
+// Component to handle map clicks for setting lat/lng
+function LocationSelector({ editing, setLat, setLng }: { editing: boolean, setLat: (lat: number) => void, setLng: (lng: number) => void }) {
+  useMapEvent('click', (e) => {
+    if (editing) {
+      setLat(e.latlng.lat);
+      setLng(e.latlng.lng);
+    }
+  });
+  return null;
+}
+
+// Component to keep the map centered on the marker when lat/lng change
+function CenterMapOnMarker({ lat, lng }: { lat: number, lng: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([lat, lng]);
+  }, [lat, lng, map]);
+  return null;
+}
+
+export default function PhotoDetailPage() {
+  const { photoId } = useParams();
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [lat, setLat] = useState<number | null>(42.3601); // Example: Boston
+  const [lng, setLng] = useState<number | null>(-71.0589);
+  const [locationText, setLocationText] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [description, setDescription] = useState<string>('');
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Fetch photo info from Supabase
+  useEffect(() => {
+    if (!photoId || typeof photoId !== 'string' || photoId.trim() === '') {
+      setPhotoUrl(null);
+      setLat(null);
+      setLng(null);
+      setLocationText('');
+      setDescription('');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    supabase
+      .from('photos')
+      .select('url, lat, lng, description')
+      .eq('id', photoId)
+      .single()
+      .then(async ({ data, error }) => {
+        if (error || !data) {
+          setPhotoUrl(null);
+          setLoading(false);
+          setLocationText('');
+          setDescription('');
+          return;
+        }
+        setPhotoUrl(data.url || null);
+        setLat(data.lat ?? 42.3601);
+        setLng(data.lng ?? -71.0589);
+        setDescription(data.description || '');
+        setLoading(false);
+        // Reverse geocoding to get a human-friendly address
+        if (data.lat != null && data.lng != null) {
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${data.lat}&lon=${data.lng}`);
+            if (!response.ok) throw new Error('Reverse geocoding failed');
+            const geo = await response.json();
+            if (geo.display_name) {
+              setLocationText(geo.display_name);
+            } else {
+              setLocationText('Unknown location');
+            }
+          } catch (e) {
+            setLocationText('Unknown location');
+          }
+        } else {
+          setLocationText('No location available');
+        }
+      });
+  }, [photoId]);
+
+  // Update location text when lat/lng are changed in edit mode
+  useEffect(() => {
+    if (!editing) return;
+    if (lat != null && lng != null) {
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(geo => {
+          if (geo && geo.display_name) {
+            setLocationText(geo.display_name);
+          } else {
+            setLocationText('Unknown location');
+          }
+        })
+        .catch(() => setLocationText('Unknown location'));
+    } else {
+      setLocationText('No location available');
+    }
+  }, [lat, lng, editing]);
+
+  // No reverse geocoding for now
+
+  // Custom marker icon to fix missing default icon issue in Leaflet
+  const markerIcon = new L.Icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+
+  return (
+    <Box sx={{ maxWidth: 900, mx: 'auto', mt: 4, p: 2 }}>
+      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3 }}>
+        <Box sx={{ flex: 1, minWidth: 0, maxWidth: 420, width: 420 }}>
+          <Paper elevation={2} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 320, height: '100%' }}>
+            {photoUrl ? (
+              <SupabaseImage path={photoUrl} alt="Bird" style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }} />
+            ) : (
+              <Box sx={{ width: 300, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#eee', borderRadius: 2 }}>
+                <Typography variant="body2" color="text.secondary">No Image Available</Typography>
+              </Box>
+            )}
+          </Paper>
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0, maxWidth: 420, width: 420 }}>
+          <Paper elevation={2} sx={{ p: 2, minHeight: 320, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            {lat && lng && (
+              <Box sx={{ width: '100%', height: { xs: 250, md: 320 }, borderRadius: 2, overflow: 'hidden', mb: 1, minWidth: 0, minHeight: 250, maxHeight: 320 }}>
+                <MapContainer
+                  center={[lat, lng]}
+                  zoom={13}
+                  style={{ width: '100%', height: '100%' }}
+                  scrollWheelZoom={true}
+                  dragging={true}
+                  key={photoId}
+                >
+                  <CenterMapOnMarker lat={lat} lng={lng} />
+                  <LocationSelector editing={editing} setLat={setLat} setLng={setLng} />
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <Marker
+                    position={[lat, lng]}
+                    icon={markerIcon}
+                    draggable={editing}
+                    eventHandlers={editing ? {
+                      dragend: (e) => {
+                        const marker = e.target;
+                        const newPos = marker.getLatLng();
+                        setLat(newPos.lat);
+                        setLng(newPos.lng);
+                      },
+                    } : undefined}
+                  >
+                    <Popup>
+                      {locationText}
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              </Box>
+            )}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 2, width: '100%', minHeight: 28, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', display: 'block' }}
+              title={locationText}
+            >
+              {locationText.length > 30 ? locationText.slice(0, 30) + '…' : locationText}
+            </Typography>
+          </Paper>
+        </Box>
+      </Box>
+      {/* Second row: description */}
+      <Paper elevation={2} sx={{ p: 3, mt: 3, position: 'relative' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ flex: 1, mb: 0, textAlign: 'left', fontWeight: 500, letterSpacing: 0.2 }}>Details</Typography>
+          {!editing && (
+            <Tooltip title="Edit">
+              <IconButton size="small" color="primary" onClick={() => setEditing(true)}>
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+        <Stack spacing={2}>
+          {editing ? (
+            <>
+              <TextField
+                label="Details"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                fullWidth
+                multiline
+                minRows={2}
+                maxRows={6}
+              />
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  label="Latitude"
+                  type="number"
+                  value={lat ?? ''}
+                  onChange={e => setLat(e.target.value === '' ? null : parseFloat(e.target.value))}
+                  inputProps={{ step: 'any' }}
+                  sx={{ width: 180 }}
+                />
+                <TextField
+                  label="Longitude"
+                  type="number"
+                  value={lng ?? ''}
+                  onChange={e => setLng(e.target.value === '' ? null : parseFloat(e.target.value))}
+                  inputProps={{ step: 'any' }}
+                  sx={{ width: 180 }}
+                />
+              </Stack>
+              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled={saving}
+                  onClick={async () => {
+                    if (!photoId) return;
+                    setSaving(true);
+                    await supabase
+                      .from('photos')
+                      .update({ lat, lng, description })
+                      .eq('id', photoId);
+                    setEditing(false);
+                    setSaving(false);
+                  }}
+                >
+                  Save
+                </Button>
+                <Button
+                  variant="outlined"
+                  disabled={saving}
+                  onClick={() => setEditing(false)}
+                >
+                  Cancel
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 1, textAlign: 'left' }}>
+                {description || 'No details.'}
+              </Typography>
+            </>
+          )}
+        </Stack>
+      </Paper>
+    </Box>
+  );
+}

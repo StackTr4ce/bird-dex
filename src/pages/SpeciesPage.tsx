@@ -5,7 +5,7 @@ import SupabaseImage from '../components/SupabaseImage';
 import DeleteIcon from '@mui/icons-material/Delete';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 
@@ -18,6 +18,7 @@ interface Photo {
 }
 
 const SpeciesPage = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   // Assume route is /species/:id
   const params = useParams();
@@ -113,7 +114,9 @@ const SpeciesPage = () => {
           ) : (
             photos.map(photo => (
               <Paper key={photo.id} elevation={photo.is_top ? 6 : 2} sx={{ position: 'relative', border: photo.is_top ? '2px solid #1976d2' : '1px solid #444', borderRadius: 3, p: 0, background: 'background.paper', width: '100%', maxWidth: 360, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'stretch', mx: 'auto' }}>
-                <Box sx={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', minHeight: 0 }}>
+                <Box sx={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', minHeight: 0, cursor: 'pointer' }}
+                  onClick={() => navigate(`/photo/${photo.id}`)}
+                >
                   {/* Always use SupabaseImage to generate a fresh signed URL for each photo */}
                   <SupabaseImage path={photo.thumbnail_url || photo.url} alt={speciesName ? `${speciesName} photo` : 'Bird photo'} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
                   <Box sx={{ position: 'absolute', top: 6, right: 6, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5, zIndex: 2 }}>

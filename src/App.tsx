@@ -20,6 +20,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
+import PhotoDetailPage from './pages/PhotoDetailPage';
 
 
 
@@ -155,6 +156,13 @@ function App() {
               <ProtectedRoute>
                 <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>
                   <UserProfilePage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/photo/:photoId" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>
+                  <PhotoDetailPage />
                 </Container>
               </ProtectedRoute>
             } />
