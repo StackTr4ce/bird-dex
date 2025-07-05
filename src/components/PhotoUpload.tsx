@@ -654,8 +654,8 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
 
   useEffect(() => {
     if (!questId) {
-      // Use hardcoded species list for My Uploads
-      setSpeciesList(HARDCODED_SPECIES.map((name, idx) => ({ id: String(idx), name })));
+      // Use hardcoded species list for My Uploads - use name as id
+      setSpeciesList(HARDCODED_SPECIES.map((name) => ({ id: name, name })));
     }
   }, [questId]);
 

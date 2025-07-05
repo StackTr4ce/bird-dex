@@ -31,9 +31,8 @@ const SpeciesPage = () => {
     if (!user || !speciesId) return;
     setLoading(true);
     const fetchPhotos = async () => {
-      // Get species name
-      const { data: speciesData } = await supabase.from('species').select('name').eq('id', speciesId).maybeSingle();
-      setSpeciesName(speciesData?.name || '');
+      // Since species_id now contains the species name, use it directly
+      setSpeciesName(speciesId);
       // Get all user's photos for this species
       const { data: photoData } = await supabase
         .from('photos')
