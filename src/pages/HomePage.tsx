@@ -153,14 +153,44 @@ const HomePage = () => {
         <Typography variant="h6" color="text.secondary" gutterBottom>
           Your bird photo collection and leaderboard hub
         </Typography>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={() => navigate('/login')}
-          sx={{ mt: 3 }}
-        >
-          Get Started
-        </Button>
+        <Typography variant="body1" color="text.secondary" sx={{ mt: 3, mb: 4 }}>
+          Join the community of bird photographers! Upload your photos, compete with friends, 
+          and discover amazing bird species from around the world.
+        </Typography>
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, 
+          gap: 3, 
+          mt: 4 
+        }}>
+          <Box sx={{ p: 3, bgcolor: 'grey.900', borderRadius: 2 }}>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              📸 Photo Collection
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Upload and organize your bird photos with species identification
+            </Typography>
+          </Box>
+          <Box sx={{ p: 3, bgcolor: 'grey.900', borderRadius: 2 }}>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              🏆 Compete & Leaderboard
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Compete with friends and climb the global leaderboard
+            </Typography>
+          </Box>
+          <Box sx={{ p: 3, bgcolor: 'grey.900', borderRadius: 2 }}>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              🔥 Photo Quests
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Participate in community photo challenges and win awards
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
+          Click "Login" in the navigation to get started!
+        </Typography>
       </Box>
     );
   }
