@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ImageCropper from './ImageCropper';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 import {
   Box,
   Paper,
-  Typography,
   Stack,
   Button,
   MenuItem,
@@ -15,6 +14,7 @@ import {
   FormHelperText,
   CircularProgress,
   TextField,
+  Autocomplete,
 } from '@mui/material';
 
 
@@ -29,8 +29,6 @@ interface PhotoUploadProps {
 
 const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
   const { user } = useAuth();
-  // Fetch species for normal uploads (not quest entry)
-  const [speciesList, setSpeciesList] = useState<{ id: string; name: string }[]>([]);
   const [speciesId, setSpeciesId] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [privacy, setPrivacy] = useState<'public' | 'friends' | 'private'>('public');
@@ -652,13 +650,6 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
     // ... (truncated for brevity, add the full list as needed)
   ];
 
-  useEffect(() => {
-    if (!questId) {
-      // Use hardcoded species list for My Uploads - use name as id
-      setSpeciesList(HARDCODED_SPECIES.map((name) => ({ id: name, name })));
-    }
-  }, [questId]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -729,20 +720,31 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
         <Stack spacing={2}>
           {/* Species selection for normal uploads */}
           {!questId && (
-            <FormControl fullWidth required>
-              <InputLabel id="species-label">Species</InputLabel>
-              <Select
-                labelId="species-label"
-                value={speciesId}
-                label="Species"
-                onChange={e => setSpeciesId(e.target.value as string)}
-              >
-                {speciesList.map(s => (
-                  <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>Select the bird species</FormHelperText>
-            </FormControl>
+            <Autocomplete
+              options={HARDCODED_SPECIES}
+              value={speciesId || null}
+              onChange={(_, newValue) => {
+                setSpeciesId(newValue || '');
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Species"
+                  required
+                  helperText="Type to search for a bird species"
+                />
+              )}
+              filterOptions={(options, { inputValue }) => {
+                const filtered = options.filter((option) =>
+                  option.toLowerCase().includes(inputValue.toLowerCase())
+                );
+                return filtered.slice(0, 50); // Limit to 50 results for performance
+              }}
+              noOptionsText="No species found"
+              clearOnEscape
+              selectOnFocus
+              handleHomeEndKeys
+            />
           )}
           <FormControl fullWidth required>
             <Button
