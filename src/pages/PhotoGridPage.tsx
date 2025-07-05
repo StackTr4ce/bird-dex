@@ -6,7 +6,6 @@ import { useAuth } from '../components/AuthProvider';
 import {
   Box,
   Typography,
-  Chip,
   IconButton,
   Tooltip,
   useTheme,
@@ -81,64 +80,119 @@ const PhotoGridPage = () => {
 
   if (loading) {
     return (
-      <Box sx={{ 
-        width: '95%', 
-        mx: 'auto', 
-        px: { xs: 1, sm: 2 },
-        pt: { xs: '60px', sm: '68px' } // Just enough to clear the NavBar
-      }}>
-        <Skeleton variant="text" width={300} height={60} sx={{ mb: 2 }} />
-        <Skeleton variant="text" width={150} height={30} sx={{ mb: 4 }} />
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`,
-            gap: 1,
-            width: '100%',
-          }}
-        >
-          {Array.from({ length: 12 }).map((_, index) => (
-            <Skeleton
-              key={index}
-              variant="rectangular"
-              sx={{
-                aspectRatio: '1',
-                borderRadius: 2,
-                width: '100%',
-              }}
+      <>
+        <Box sx={{ 
+          width: '100%', 
+          pt: { xs: '60px', sm: '68px' },
+          pb: { xs: 1, sm: 1.5 },
+          mb: 1
+        }}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            width: '95%',
+            mx: 'auto',
+            px: { xs: 1, sm: 2 }
+          }}>
+            <Skeleton 
+              variant="rectangular" 
+              width={220} 
+              height={60} 
+              sx={{ borderRadius: 3 }} 
             />
-          ))}
+          </Box>
         </Box>
-      </Box>
+        <Box sx={{ 
+          width: '95%', 
+          mx: 'auto', 
+          px: { xs: 1, sm: 2 }
+        }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`,
+              gap: 1,
+              width: '100%',
+            }}
+          >
+            {Array.from({ length: 12 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                sx={{
+                  aspectRatio: '1',
+                  borderRadius: 2,
+                  width: '100%',
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+      </>
     );
   }
 
   return (
     <>
-      {/* Header Section */}
+      {/* Header Section - Focal Point */}
       <Box sx={{ 
-        mb: 2, 
-        width: '95%', 
-        mx: 'auto', 
-        px: { xs: 1, sm: 2 },
-        pt: { xs: '60px', sm: '68px' } // Just enough to clear the NavBar
+        width: '100%', 
+        pt: { xs: '60px', sm: '68px' },
+        pb: { xs: 1, sm: 1.5 },
+        mb: 1
       }}>
-        <Typography 
-          variant="h4" 
-          fontWeight="bold" 
-          gutterBottom
-          sx={{ fontSize: { xs: '1.8rem', sm: '2.125rem' }, mb: 1 }}
-        >
-          My Bird Collection
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Chip
-            icon={<StarIcon />}
-            label={`${score} Species Collected`}
-            color="primary"
-            variant="filled"
-            sx={{ fontWeight: 600 }}
-          />
+        <Box sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          width: '95%',
+          mx: 'auto',
+          px: { xs: 1, sm: 2 }
+        }}>
+          {/* Species Count - The Focal Point */}
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: { xs: 2, sm: 3 },
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            borderRadius: 3,
+            px: { xs: 3, sm: 4 },
+            py: { xs: 2, sm: 2.5 },
+            boxShadow: 2,
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          }}>
+            <StarIcon sx={{ 
+              fontSize: { xs: 20, sm: 24 },
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
+            }} />
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+              <Typography 
+                variant="h1" 
+                fontWeight="800"
+                sx={{ 
+                  fontSize: { xs: '1.5rem', sm: '2rem' },
+                  lineHeight: 1,
+                  textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                }}
+              >
+                {score}
+              </Typography>
+              <Typography 
+                variant="h6" 
+                fontWeight="600"
+                sx={{ 
+                  fontSize: { xs: '0.6rem', sm: '0.75rem' },
+                  opacity: 0.9,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5
+                }}
+              >
+                Species Collected
+              </Typography>
+            </Box>
+          </Box>
         </Box>
       </Box>
 
