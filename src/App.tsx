@@ -13,6 +13,7 @@ import QuestDetailPage from './pages/QuestDetailPage';
 import LoginPage from './pages/LoginPage';
 import UserProfilePage from './pages/UserProfilePage';
 import NavBar from './components/NavBar';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
@@ -77,17 +78,57 @@ function App() {
         <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/grid" element={<PhotoGridPage />} />
-            <Route path="/species/:speciesId" element={<SpeciesPage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/friends" element={<FriendsPage />} />
-            <Route path="/feed" element={<FeedPage />} />
-            <Route path="/my-uploads" element={<MyUploadsPage />} />
-            <Route path="/quests" element={<QuestsPage />} />
-            <Route path="/quests/:questId" element={<QuestDetailPage />} />
-            <Route path="/quests-admin" element={<QuestsAdminPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/profile" element={<UserProfilePage />} />
+            <Route path="/grid" element={
+              <ProtectedRoute>
+                <PhotoGridPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/species/:speciesId" element={
+              <ProtectedRoute>
+                <SpeciesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/leaderboard" element={
+              <ProtectedRoute>
+                <LeaderboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/friends" element={
+              <ProtectedRoute>
+                <FriendsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/feed" element={
+              <ProtectedRoute>
+                <FeedPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-uploads" element={
+              <ProtectedRoute>
+                <MyUploadsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/quests" element={
+              <ProtectedRoute>
+                <QuestsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/quests/:questId" element={
+              <ProtectedRoute>
+                <QuestDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/quests-admin" element={
+              <ProtectedRoute>
+                <QuestsAdminPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <UserProfilePage />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Container>
