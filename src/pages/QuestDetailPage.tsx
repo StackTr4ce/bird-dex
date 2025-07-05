@@ -180,7 +180,7 @@ const QuestDetailPage = () => {
     // Exclude winner and user's entry from the list below
     const otherEntries = entries.filter(e => e.id !== winnerEntryId && (!myEntry || e.id !== myEntry.id));
     return (
-      <Box sx={{ maxWidth: 900, mx: 'auto', p: { xs: 1, sm: 2, md: 3 } }}>
+      <Box sx={{ width: '100%', maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh', boxSizing: 'border-box', overflowX: 'hidden' }}>
         <Typography variant="h4" fontWeight={700} gutterBottom>{quest.name}</Typography>
         <Typography variant="subtitle1" gutterBottom>{quest.description}</Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>

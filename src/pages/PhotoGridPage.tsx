@@ -45,20 +45,18 @@ const PhotoGridPage = () => {
       // Here, we assume 'is_top' boolean exists
       const { data, error } = await supabase
         .from('photos')
-        .select('id,url,thumbnail_url,species_id,user_id,created_at,species(name)')
+        .select('id,url,thumbnail_url,species_id,user_id,created_at')
         .eq('user_id', user.id)
         .eq('is_top', true)
         .order('species_id', { ascending: true });
       if (error) {
         setTopPhotos([]);
       } else {
-        // Flatten species name if joined
-        setTopPhotos(
-          (data || []).map((p: any) => ({
-            ...p,
-            species_name: p.species?.name || '',
-          }))
-        );
+        // Use species_id as the name if species_name is not present
+        setTopPhotos((data || []).map((p: any) => ({
+          ...p,
+          species_name: p.species_id || '',
+        })));
       }
       setLoading(false);
     };
@@ -81,40 +79,35 @@ const PhotoGridPage = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: 'repeat(1, minmax(0, 1fr))',
-              sm: 'repeat(2, minmax(0, 1fr))',
-              md: 'repeat(3, minmax(360px, 1fr))',
-              lg: 'repeat(4, minmax(360px, 1fr))',
-              xl: 'repeat(5, minmax(360px, 1fr))',
-            },
-            gap: 2,
-            mt: 1,
-            width: '100%',
-            alignItems: 'start',
-            boxSizing: 'border-box',
-            overflowX: 'hidden',
-          }}
-        >
-          {topPhotos.length === 0 ? (
-            <Box sx={{
-              gridColumn: '1/-1',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 240,
-              textAlign: 'center',
-            }}>
-              <Typography color="text.secondary">No top photos found.</Typography>
-            </Box>
-          ) : (
-            topPhotos.map(photo => (
-              <Box key={photo.id} sx={{ aspectRatio: '1 / 1', width: '100%', maxWidth: 360, mx: 'auto' }}>
+        <>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(6, 1fr)',
+              gap: 0.5,
+              mt: 1,
+              width: '100%',
+              alignItems: 'start',
+              boxSizing: 'border-box',
+              overflowX: 'hidden',
+            }}
+          >
+            {topPhotos.length === 0 && (
+              <Box sx={{
+                gridColumn: '1/-1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: 240,
+                textAlign: 'center',
+              }}>
+                <Typography color="text.secondary">No top photos found.</Typography>
+              </Box>
+            )}
+            {topPhotos.length > 0 && topPhotos.map(photo => (
+              <Box key={photo.id} sx={{ width: '100%', aspectRatio: '1 / 1', minWidth: 0 }}>
                 <Card
-                  sx={{ borderRadius: 3, boxShadow: 2, height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer' }}
+                  sx={{ borderRadius: 1, boxShadow: 1, height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', cursor: 'pointer', m: 0 }}
                   onClick={() => navigate(`/species/${photo.species_id}`)}
                   title={`View all photos for ${photo.species_name}`}
                 >
@@ -128,22 +121,22 @@ const PhotoGridPage = () => {
                         left: 0,
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: 8,
+                        objectFit: 'contain',
+                        borderRadius: 4,
                         background: '#222',
                       }}
                     />
                   </Box>
-                  <CardContent sx={{ p: 1, flexGrow: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={600} align="center" noWrap>
+                  <CardContent sx={{ p: 0.5, flexGrow: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={500} align="center" noWrap>
                       {photo.species_name}
                     </Typography>
                   </CardContent>
                 </Card>
               </Box>
-            ))
-          )}
-        </Box>
+            ))}
+          </Box>
+        </>
       )}
     </Box>
   );
