@@ -23,7 +23,7 @@ import { useAdmin } from './AdminProvider';
 
 const navLinks = [
   { to: '/', label: 'Home', icon: <HomeIcon sx={{ mr: 1 }} />, requiresAuth: false },
-  { to: '/grid', label: 'Photo Grid', icon: <GridOnIcon sx={{ mr: 1 }} />, requiresAuth: true },
+  { to: '/dex', label: 'Dex', icon: <GridOnIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/leaderboard', label: 'Leaderboard', icon: <EmojiEventsIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/friends', label: 'Friends', icon: <GroupIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/feed', label: 'Feed', icon: <DynamicFeedIcon sx={{ mr: 1 }} />, requiresAuth: true },

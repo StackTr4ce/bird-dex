@@ -77,7 +77,7 @@ function App() {
           <NavBar />
           <Routes>
             {/* Full-width routes (outside Container) */}
-            <Route path="/grid" element={
+            <Route path="/dex" element={
               <ProtectedRoute>
                 <PhotoGridPage />
               </ProtectedRoute>

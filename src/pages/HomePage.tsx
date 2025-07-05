@@ -313,9 +313,9 @@ const HomePage = () => {
                 variant="contained"
                 fullWidth
                 startIcon={<PhotoLibraryIcon />}
-                onClick={() => navigate('/grid')}
+                onClick={() => navigate('/dex')}
               >
-                View Photo Grid
+                View Dex
               </Button>
             </Box>
           </CardContent>
