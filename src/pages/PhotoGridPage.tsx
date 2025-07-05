@@ -84,8 +84,8 @@ const PhotoGridPage = () => {
       <Box sx={{ 
         width: '95%', 
         mx: 'auto', 
-        p: { xs: 1, sm: 2 },
-        mt: 2,
+        px: { xs: 1, sm: 2 },
+        pt: { xs: '60px', sm: '68px' } // Just enough to clear the NavBar
       }}>
         <Skeleton variant="text" width={300} height={60} sx={{ mb: 2 }} />
         <Skeleton variant="text" width={150} height={30} sx={{ mb: 4 }} />
@@ -114,23 +114,24 @@ const PhotoGridPage = () => {
   }
 
   return (
-    <Box sx={{ 
-      width: '95%', 
-      mx: 'auto', 
-      p: { xs: 1, sm: 2 },
-      mt: 2,
-    }}>
+    <>
       {/* Header Section */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ 
+        mb: 2, 
+        width: '95%', 
+        mx: 'auto', 
+        px: { xs: 1, sm: 2 },
+        pt: { xs: '60px', sm: '68px' } // Just enough to clear the NavBar
+      }}>
         <Typography 
           variant="h4" 
           fontWeight="bold" 
           gutterBottom
-          sx={{ fontSize: { xs: '1.8rem', sm: '2.125rem' } }}
+          sx={{ fontSize: { xs: '1.8rem', sm: '2.125rem' }, mb: 1 }}
         >
           My Bird Collection
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Chip
             icon={<StarIcon />}
             label={`${score} Species Collected`}
@@ -153,6 +154,8 @@ const PhotoGridPage = () => {
           borderRadius: 3,
           border: `2px dashed ${theme.palette.divider}`,
           p: 4,
+          width: '95%',
+          mx: 'auto',
         }}>
           <PhotoCameraIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h5" color="text.secondary" gutterBottom>
@@ -168,7 +171,9 @@ const PhotoGridPage = () => {
             display: 'grid',
             gridTemplateColumns: `repeat(${getGridColumns()}, 1fr)`,
             gap: 1,
-            width: '100%',
+            width: '95%',
+            mx: 'auto',
+            p: { xs: 1, sm: 2 },
           }}
         >
           {topPhotos.map((photo) => (
@@ -260,7 +265,7 @@ const PhotoGridPage = () => {
           ))}
         </Box>
       )}
-    </Box>
+    </>
   );
 };
 

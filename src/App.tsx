@@ -73,8 +73,6 @@ function App() {
       <CssBaseline />
       <Router>
         <NavBar />
-        {/* Spacer for fixed NavBar */}
-        <Box sx={{ height: { xs: 56, sm: 64 }, width: '100%' }} />
         <Routes>
           {/* Full-width routes (outside Container) */}
           <Route path="/grid" element={
@@ -85,74 +83,74 @@ function App() {
           
           {/* Constrained routes (inside Container) */}
           <Route path="/" element={
-            <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+            <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
               <HomePage />
             </Container>
           } />
           <Route path="/login" element={
-            <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+            <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
               <LoginPage />
             </Container>
           } />
           <Route path="/species/:speciesId" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <SpeciesPage />
               </Container>
             </ProtectedRoute>
           } />
           <Route path="/leaderboard" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <LeaderboardPage />
               </Container>
             </ProtectedRoute>
           } />
           <Route path="/friends" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <FriendsPage />
               </Container>
             </ProtectedRoute>
           } />
           <Route path="/feed" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <FeedPage />
               </Container>
             </ProtectedRoute>
           } />
           <Route path="/my-uploads" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <MyUploadsPage />
               </Container>
             </ProtectedRoute>
           } />
           <Route path="/quests" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <QuestsPage />
               </Container>
             </ProtectedRoute>
           } />
           <Route path="/quests/:questId" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <QuestDetailPage />
               </Container>
             </ProtectedRoute>
           } />
           <Route path="/quests-admin" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <QuestsAdminPage />
               </Container>
             </ProtectedRoute>
           } />
           <Route path="/profile" element={
             <ProtectedRoute>
-              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <Container maxWidth="md" sx={{ mt: { xs: 'calc(56px + 24px)', sm: 'calc(64px + 24px)' }, mb: 4 }}>
                 <UserProfilePage />
               </Container>
             </ProtectedRoute>
