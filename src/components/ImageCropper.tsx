@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Cropper from 'react-easy-crop';
 import { Box, Button, Stack } from '@mui/material';
 
@@ -51,7 +51,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ file, onCropped, onCancel }
     reader.readAsDataURL(file);
   }, [file]);
 
-  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+  const onCropComplete = useCallback((croppedArea: any, _croppedAreaPixels: any) => {
     setCroppedArea(croppedArea);
   }, []);
 

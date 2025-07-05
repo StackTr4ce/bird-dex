@@ -15,7 +15,7 @@ const UserProfilePage = () => {
     const fetchProfile = async () => {
       setLoading(true);
       if (!user) return;
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_profiles')
         .select('display_name')
         .eq('user_id', user.id)

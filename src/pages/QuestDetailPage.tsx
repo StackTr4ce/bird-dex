@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Typography, Paper, CircularProgress, Button, Stack, Avatar, Chip, Grid } from '@mui/material';
+import { Box, Typography, Paper, CircularProgress, Button, Stack, Avatar, Chip } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { supabase } from '../supabaseClient';
 import SelectPhotoModal from '../components/SelectPhotoModal';
@@ -190,9 +190,9 @@ const QuestDetailPage = () => {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {`Start: ${new Date(quest.start_time).toLocaleString()} | End: ${new Date(quest.end_time).toLocaleString()}`}
         </Typography>
-        <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, mb: 3 }}>
           {/* Winner on the left */}
-          <Grid item xs={12} md={6} lg={4}>
+          <Box sx={{ flex: { xs: 1, md: '0 0 33%' } }}>
             {winnerEntry && winnerPhoto && (
               <Paper variant="outlined" sx={{ p: 2, border: '2.5px solid #FFD700', background: 'rgba(255,223,0,0.08)', position: 'relative', textAlign: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
@@ -206,9 +206,9 @@ const QuestDetailPage = () => {
                 </Typography>
               </Paper>
             )}
-          </Grid>
+          </Box>
           {/* User's entry on the right */}
-          <Grid item xs={12} md={6} lg={8}>
+          <Box sx={{ flex: { xs: 1, md: '0 0 67%' } }}>
             {myEntry && photoMap[myEntry.photo_id] && (
               <Paper variant="outlined" sx={{ p: 2, background: 'rgba(0,0,0,0.04)', textAlign: 'center' }}>
                 <Typography variant="subtitle1" color="primary">Your Entry</Typography>
@@ -218,43 +218,42 @@ const QuestDetailPage = () => {
                 </Typography>
               </Paper>
             )}
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
         <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>Other Entries</Typography>
-        <Grid container spacing={2}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
           {otherEntries.map(entry => (
             photoMap[entry.photo_id] && (
-              <Grid item xs={12} sm={6} md={4} key={entry.id}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    textAlign: 'center',
-                    border: votedEntryId === entry.id ? '2.5px solid #1976d2' : undefined,
-                    background: votedEntryId === entry.id ? 'rgba(25,118,210,0.08)' : undefined,
-                    position: 'relative',
-                  }}
-                >
-                  <SupabaseImage path={photoMap[entry.photo_id].url} width={160} height={160} style={{ borderRadius: 8 }} />
-                  <Box sx={{ mt: 1, mb: 1 }}>
-                    <Typography variant="subtitle2">
-                      {userProfileMap[entry.user_id] || 'Unknown User'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {voteCounts[entry.id] || 0} vote{(voteCounts[entry.id] || 0) === 1 ? '' : 's'}
-                    </Typography>
+              <Paper
+                key={entry.id}
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  textAlign: 'center',
+                  border: votedEntryId === entry.id ? '2.5px solid #1976d2' : undefined,
+                  background: votedEntryId === entry.id ? 'rgba(25,118,210,0.08)' : undefined,
+                  position: 'relative',
+                }}
+              >
+                <SupabaseImage path={photoMap[entry.photo_id].url} width={160} height={160} style={{ borderRadius: 8 }} />
+                <Box sx={{ mt: 1, mb: 1 }}>
+                  <Typography variant="subtitle2">
+                    {userProfileMap[entry.user_id] || 'Unknown User'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {voteCounts[entry.id] || 0} vote{(voteCounts[entry.id] || 0) === 1 ? '' : 's'}
+                  </Typography>
+                </Box>
+                {/* Minimal voted indication */}
+                {votedEntryId === entry.id && (
+                  <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 700 }}>Voted</Typography>
                   </Box>
-                  {/* Minimal voted indication */}
-                  {votedEntryId === entry.id && (
-                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 700 }}>Voted</Typography>
-                    </Box>
-                  )}
-                </Paper>
-              </Grid>
+                )}
+              </Paper>
             )
           ))}
-        </Grid>
+        </Box>
       </Box>
     );
   }
@@ -287,52 +286,51 @@ const QuestDetailPage = () => {
         />
       </Box>
       <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>Entries</Typography>
-      <Grid container spacing={2}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
         {entries.filter(e => !myEntry || e.id !== myEntry.id).map(entry => (
           photoMap[entry.photo_id] && (
-            <Grid item xs={12} sm={6} md={4} key={entry.id}>
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  textAlign: 'center',
-                  border: winnerEntryId === entry.id ? '2.5px solid #FFD700' : undefined,
-                  background: winnerEntryId === entry.id ? 'rgba(255,223,0,0.08)' : undefined,
-                  position: 'relative',
-                }}
-              >
-                {winnerEntryId === entry.id && (
-                  <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <EmojiEventsIcon sx={{ color: '#FFD700' }} />
-                    <Typography variant="subtitle2" sx={{ color: '#FFD700', fontWeight: 700 }}>
-                      Winner
-                    </Typography>
-                  </Box>
-                )}
-                <SupabaseImage path={photoMap[entry.photo_id].url} width={200} height={200} style={{ borderRadius: 8 }} />
-                <Box sx={{ mt: 1, mb: 1 }}>
-                  <Typography variant="subtitle2">
-                    {userProfileMap[entry.user_id] || 'Unknown User'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {voteCounts[entry.id] || 0} vote{(voteCounts[entry.id] || 0) === 1 ? '' : 's'}
+            <Paper
+              key={entry.id}
+              variant="outlined"
+              sx={{
+                p: 2,
+                textAlign: 'center',
+                border: winnerEntryId === entry.id ? '2.5px solid #FFD700' : undefined,
+                background: winnerEntryId === entry.id ? 'rgba(255,223,0,0.08)' : undefined,
+                position: 'relative',
+              }}
+            >
+              {winnerEntryId === entry.id && (
+                <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EmojiEventsIcon sx={{ color: '#FFD700' }} />
+                  <Typography variant="subtitle2" sx={{ color: '#FFD700', fontWeight: 700 }}>
+                    Winner
                   </Typography>
                 </Box>
-                <Button
-                  variant={votedEntryId === entry.id ? 'contained' : 'outlined'}
-                  color={votedEntryId === entry.id ? 'primary' : 'inherit'}
-                  size="small"
-                  disabled={submittingVote}
-                  onClick={() => handleVote(entry.id)}
-                  sx={{ mt: 1 }}
-                >
-                  {votedEntryId === entry.id ? 'Voted' : 'Vote'}
-                </Button>
-              </Paper>
-            </Grid>
+              )}
+              <SupabaseImage path={photoMap[entry.photo_id].url} width={200} height={200} style={{ borderRadius: 8 }} />
+              <Box sx={{ mt: 1, mb: 1 }}>
+                <Typography variant="subtitle2">
+                  {userProfileMap[entry.user_id] || 'Unknown User'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {voteCounts[entry.id] || 0} vote{(voteCounts[entry.id] || 0) === 1 ? '' : 's'}
+                </Typography>
+              </Box>
+              <Button
+                variant={votedEntryId === entry.id ? 'contained' : 'outlined'}
+                color={votedEntryId === entry.id ? 'primary' : 'inherit'}
+                size="small"
+                disabled={submittingVote}
+                onClick={() => handleVote(entry.id)}
+                sx={{ mt: 1 }}
+              >
+                {votedEntryId === entry.id ? 'Voted' : 'Vote'}
+              </Button>
+            </Paper>
           )
         ))}
-      </Grid>
+      </Box>
     </Box>
   );
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions, Button, Grid, CircularProgress, Box, Typography
+  Dialog, DialogTitle, DialogContent, DialogActions, Button, CircularProgress, Box, Typography
 } from '@mui/material';
 import { supabase } from '../supabaseClient';
 import SupabaseImage from './SupabaseImage';
@@ -63,24 +63,25 @@ const SelectPhotoModal = ({ open, onClose, onSelect }: SelectPhotoModalProps) =>
             <CircularProgress />
           </Box>
         ) : (
-          <Grid container spacing={2}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
             {photos.map(photo => (
-              <Grid item key={photo.id} xs={6} sm={4} md={3}>
-                <Box
-                  sx={{ cursor: 'pointer', border: '2px solid transparent', borderRadius: 2, '&:hover': { borderColor: 'primary.main' } }}
-                  onClick={() => handleSelect(photo)}
-                >
-                  <SupabaseImage path={photo.thumbnail_url || photo.url} alt="User photo" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8 }} />
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'center' }}>
-                    {new Date(photo.created_at).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              </Grid>
+              <Box
+                key={photo.id}
+                sx={{ cursor: 'pointer', border: '2px solid transparent', borderRadius: 2, '&:hover': { borderColor: 'primary.main' } }}
+                onClick={() => handleSelect(photo)}
+              >
+                <SupabaseImage path={photo.thumbnail_url || photo.url} alt="User photo" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8 }} />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'center' }}>
+                  {new Date(photo.created_at).toLocaleDateString()}
+                </Typography>
+              </Box>
             ))}
             {photos.length === 0 && !loading && (
-              <Grid item xs={12}><Typography color="text.secondary">No photos found.</Typography></Grid>
+              <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 4 }}>
+                <Typography color="text.secondary">No photos found.</Typography>
+              </Box>
             )}
-          </Grid>
+          </Box>
         )}
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'space-between' }}>
