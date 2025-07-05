@@ -1,6 +1,19 @@
 
 import { useState, useEffect } from 'react';
-import { Box, IconButton, Tooltip, Typography, Paper, CircularProgress } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, Paper, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
+// Responsive grid columns logic (copied from PhotoGridPage)
+const useGridColumns = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  const isLarge = useMediaQuery(theme.breakpoints.up('xl'));
+  const isUltraWide = useMediaQuery('(min-width: 3840px)');
+  if (isMobile) return 2;
+  if (isTablet) return 3;
+  if (isUltraWide) return 12;
+  if (isLarge) return 8;
+  return 5;
+};
 import SupabaseImage from '../components/SupabaseImage';
 import DeleteIcon from '@mui/icons-material/Delete';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -80,8 +93,14 @@ const SpeciesPage = () => {
     // No setUpdating or refetch
   };
 
+  const gridColumns = useGridColumns();
   return (
-    <Box>
+    <Box sx={{ 
+      width: '100%', 
+      pt: { xs: '60px', sm: '68px' },
+      pb: { xs: 1, sm: 1.5 },
+      mb: 1
+    }}>
       <Typography align="left" variant="h4" fontWeight={700} gutterBottom sx={{ pb: 2 }}>
         Species: {speciesName}
       </Typography>
@@ -94,16 +113,12 @@ const SpeciesPage = () => {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: {
-              xs: 'repeat(1, minmax(0, 1fr))',
-              sm: 'repeat(2, minmax(0, 1fr))',
-              md: 'repeat(3, minmax(360px, 1fr))',
-              lg: 'repeat(4, minmax(360px, 1fr))',
-              xl: 'repeat(5, minmax(360px, 1fr))',
-            },
-            gap: 2,
+            gridTemplateColumns: `repeat(${gridColumns}, 1fr)`,
+            gap: 1,
+            width: '95%',
+            mx: 'auto',
+            p: { xs: 1, sm: 2 },
             mt: 1,
-            width: '100%',
             alignItems: 'stretch',
             boxSizing: 'border-box',
             overflowX: 'hidden',
@@ -113,41 +128,82 @@ const SpeciesPage = () => {
             <Typography color="text.secondary">No photos uploaded for this species.</Typography>
           ) : (
             photos.map(photo => (
-              <Paper key={photo.id} elevation={photo.is_top ? 6 : 2} sx={{ position: 'relative', border: photo.is_top ? '2px solid #1976d2' : '1px solid #444', borderRadius: 3, p: 0, background: 'background.paper', width: '100%', maxWidth: 360, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'stretch', mx: 'auto' }}>
-                <Box sx={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', minHeight: 0, cursor: 'pointer' }}
-                  onClick={() => navigate(`/photo/${photo.id}`)}
+              <Box
+                key={photo.id}
+                sx={{
+                  position: 'relative',
+                  aspectRatio: '1',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  border: photo.is_top ? '2px solid #1976d2' : '1px solid #444',
+                  boxShadow: photo.is_top ? 2 : 0,
+                  '&:hover': {
+                    transform: 'scale(1.02)',
+                    '& .photo-overlay': {
+                      opacity: 1,
+                    },
+                  },
+                }}
+                onClick={() => navigate(`/photo/${photo.id}`)}
+              >
+                <SupabaseImage
+                  path={photo.thumbnail_url || photo.url}
+                  alt={speciesName ? `${speciesName} photo` : 'Bird photo'}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+                {/* Overlay for actions */}
+                <Box
+                  className="photo-overlay"
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%)',
+                    opacity: 0,
+                    transition: 'opacity 0.2s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-end',
+                    p: 1.5,
+                  }}
                 >
-                  {/* Always use SupabaseImage to generate a fresh signed URL for each photo */}
-                  <SupabaseImage path={photo.thumbnail_url || photo.url} alt={speciesName ? `${speciesName} photo` : 'Bird photo'} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
-                  <Box sx={{ position: 'absolute', top: 6, right: 6, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5, zIndex: 2 }}>
-                    <Tooltip title="Delete Photo">
-                      <IconButton
-                        size="small"
-                        sx={{ background: 'rgba(0,0,0,0.5)', color: '#fff', mb: 0.5, '&:hover': { background: 'error.main' } }}
-                        onClick={() => deletePhoto(photo.id)}
-                        disabled={updating}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                  <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, zIndex: 2 }}>
                     <Tooltip title={photo.is_top ? 'This is your top photo' : 'Set as Top Photo'}>
                       <span>
                         <IconButton
                           size="small"
-                          sx={{ background: photo.is_top ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.5)', color: '#fff', boxShadow: photo.is_top ? 2 : 0, '&:hover': { background: 'primary.dark' }, mt: 0.5 }}
-                          onClick={() => !photo.is_top && setAsTopPhoto(photo.id)}
+                          sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'primary.dark', color: 'white' }, width: 32, height: 32, color: photo.is_top ? '#1976d2' : '#616161', boxShadow: photo.is_top ? 2 : 0, mb: 0.5 }}
+                          onClick={e => { e.stopPropagation(); !photo.is_top && setAsTopPhoto(photo.id); }}
                           disabled={updating || photo.is_top}
                         >
                           {photo.is_top ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
                         </IconButton>
                       </span>
                     </Tooltip>
+                    <Tooltip title="Delete Photo">
+                      <IconButton
+                        size="small"
+                        sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'error.main', color: 'white' }, width: 32, height: 32, color: '#616161' }}
+                        onClick={e => { e.stopPropagation(); deletePhoto(photo.id); }}
+                        disabled={updating}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
+                  <Typography variant="caption" color="white" sx={{ mt: 1, textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                    Uploaded: {new Date(photo.created_at).toLocaleString()}
+                  </Typography>
                 </Box>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                  Uploaded: {new Date(photo.created_at).toLocaleString()}
-                </Typography>
-              </Paper>
+              </Box>
             ))
           )}
         </Box>

@@ -122,7 +122,7 @@ export default function PhotoDetailPage() {
   });
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', mt: 4, p: 2 }}>
+    <Box sx={{ mx: 'auto', mt: 4, p: 2 }}>
       <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3 }}>
         <Box sx={{ flex: 1, minWidth: 0, maxWidth: 420, width: 420 }}>
           <Paper elevation={2} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 320, height: '100%' }}>

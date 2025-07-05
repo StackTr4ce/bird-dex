@@ -96,9 +96,7 @@ function App() {
             } />
             <Route path="/species/:speciesId" element={
               <ProtectedRoute>
-                <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>
-                  <SpeciesPage />
-                </Container>
+                <SpeciesPage />
               </ProtectedRoute>
             } />
             <Route path="/leaderboard" element={
