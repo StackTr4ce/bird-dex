@@ -12,6 +12,19 @@ import {
   EmojiEvents as TrophyIcon,
   DynamicFeed as FeedIcon,
 } from '@mui/icons-material';
+import Tooltip from '@mui/material/Tooltip';
+import Avatar from '@mui/material/Avatar';
+import rewardStarGold from '../assets/reward-star.svg';
+import rewardStarSilver from '../assets/reward-star-silver.svg';
+interface UserAward {
+  quest_id: string;
+  quest_name: string;
+  quest_description: string;
+  quest_date: string;
+  type: 'top10' | 'participation';
+  top10_award_url?: string;
+  participation_award_url?: string;
+}
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
@@ -39,6 +52,62 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [userStats, setUserStats] = useState<UserStats>({ uniqueSpecies: 0, totalPhotos: 0 });
   const [recentFeedPhotos, setRecentFeedPhotos] = useState<FeedPhoto[]>([]);
+  const [userAwards, setUserAwards] = useState<UserAward[]>([]);
+  const [awardPage, setAwardPage] = useState(0);
+  const AWARDS_PER_PAGE = 1;
+  // Fetch user quest awards
+  const fetchUserAwards = async () => {
+    if (!user) return;
+    // Get all quests
+    const { data: quests } = await supabase.from('quests').select('*');
+    // Get all quest_entries for this user
+    const { data: entries } = await supabase.from('quest_entries').select('quest_id,created_at').eq('user_id', user.id);
+    if (!entries || !quests) {
+      setUserAwards([]);
+      return;
+    }
+    const now = new Date();
+    const awards: UserAward[] = [];
+    for (const entry of entries) {
+      const quest = quests.find((q: any) => q.id === entry.quest_id);
+      if (!quest) continue;
+      // Only show awards for quests that have ended
+      if (new Date(quest.end_time) > now) continue;
+      // Get all entries for this quest
+      const { data: allEntries } = await supabase.from('quest_entries').select('id,user_id,quest_id').eq('quest_id', quest.id);
+      // Get top 10 (by votes, fallback to created_at)
+      let top10Ids: string[] = [];
+      if (allEntries && allEntries.length > 0) {
+        // Get votes for each entry
+        const entryIds = allEntries.map((e: any) => e.id);
+        const { data: votes } = await supabase.from('quest_votes').select('entry_id').in('entry_id', entryIds);
+        const voteCounts: Record<string, number> = {};
+        (votes || []).forEach((v: any) => {
+          voteCounts[v.entry_id] = (voteCounts[v.entry_id] || 0) + 1;
+        });
+        // Sort entries by votes desc, then created_at asc
+        const sorted = [...allEntries].sort((a: any, b: any) => {
+          const va = voteCounts[a.id] || 0;
+          const vb = voteCounts[b.id] || 0;
+          if (vb !== va) return vb - va;
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        });
+        top10Ids = sorted.slice(0, 10).map(e => e.user_id);
+      }
+      // Show top10 or participation award for ended quests
+      const type = top10Ids.includes(user.id) ? 'top10' : 'participation';
+      awards.push({
+        quest_id: quest.id,
+        quest_name: quest.name,
+        quest_description: quest.description,
+        quest_date: quest.end_time,
+        type,
+        top10_award_url: quest.top10_award_url,
+        participation_award_url: quest.participation_award_url,
+      });
+    }
+    setUserAwards(awards);
+  };
 
   // Fetch user stats
   const fetchUserStats = async () => {
@@ -136,9 +205,8 @@ const HomePage = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchUserStats(), fetchRecentFeedPhotos()]);
+      await Promise.all([fetchUserStats(), fetchRecentFeedPhotos(), fetchUserAwards()]);
     };
-
     if (user) {
       loadData();
     }
@@ -244,7 +312,7 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
-        {/* Awards Section (Placeholder) */}
+        {/* Awards Section */}
         <Card elevation={2}>
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -253,20 +321,74 @@ const HomePage = () => {
                 Your Awards
               </Typography>
             </Box>
-            
-            <Box sx={{ textAlign: 'center', py: 3 }}>
-              <Typography variant="body2" color="text.secondary">
-                No awards yet
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Participate in quests to earn awards!
-              </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', py: 2 }}>
+              {userAwards.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No awards yet
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Participate in quests to earn awards!
+                  </Typography>
+                </Box>
+              ) : (
+                userAwards
+                  .slice(awardPage * AWARDS_PER_PAGE, awardPage * AWARDS_PER_PAGE + AWARDS_PER_PAGE)
+                  .map((award, idx) => {
+                    let imgSrc = award.type === 'top10'
+                      ? (award.top10_award_url || rewardStarGold)
+                      : (award.participation_award_url || rewardStarSilver);
+                    return (
+                      <Tooltip key={award.quest_id + idx} title={<>
+                        <Typography variant="subtitle2" fontWeight={700}>{award.quest_name}</Typography>
+                        <Typography variant="caption" color={award.type === 'top10' ? 'warning.main' : 'text.secondary'}>
+                          {award.type === 'top10' ? 'Top 10 Award' : 'Participation Award'}
+                        </Typography><br/>
+                        <Typography variant="caption">{award.quest_description}</Typography><br/>
+                        <Typography variant="caption">{new Date(award.quest_date).toLocaleDateString()}</Typography>
+                      </>} arrow>
+                        <Avatar
+                          src={imgSrc}
+                          alt={award.type === 'top10' ? 'Top 10 Award' : 'Participation Award'}
+                          sx={{ width: 50, height: 50, cursor: 'pointer', border: award.type === 'top10' ? '2px solid #FFD700' : '2px solid #B0BEC5', boxShadow: 2, background: 'transparent' }}
+                          onClick={() => navigate(`/quests/${award.quest_id}`)}
+                        />
+                      </Tooltip>
+                    );
+                  })
+              )}
             </Box>
-
+            {/* Pagination Controls */}
+            {userAwards.length > AWARDS_PER_PAGE && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                <Button
+                  size="small"
+                  variant="text"
+                  sx={{ minWidth: 0, px: 1, fontSize: 20, lineHeight: 1 }}
+                  disabled={awardPage === 0}
+                  onClick={() => setAwardPage(p => Math.max(0, p - 1))}
+                >
+                  ‹
+                </Button>
+                <Typography variant="caption" sx={{ minWidth: 24, textAlign: 'center' }}>
+                  {awardPage + 1}/{Math.ceil(userAwards.length / AWARDS_PER_PAGE)}
+                </Typography>
+                <Button
+                  size="small"
+                  variant="text"
+                  sx={{ minWidth: 0, px: 1, fontSize: 20, lineHeight: 1 }}
+                  disabled={awardPage >= Math.ceil(userAwards.length / AWARDS_PER_PAGE) - 1}
+                  onClick={() => setAwardPage(p => Math.min(Math.ceil(userAwards.length / AWARDS_PER_PAGE) - 1, p + 1))}
+                >
+                  ›
+                </Button>
+              </Box>
+            )}
             <Button
               variant="outlined"
               fullWidth
               onClick={() => navigate('/quests')}
+              sx={{ mt: 2 }}
             >
               View Quests
             </Button>

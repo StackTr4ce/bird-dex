@@ -1,0 +1,25 @@
+<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="starGradientSilver" cx="50%" cy="40%" r="60%" fx="50%" fy="30%">
+      <stop offset="0%" stop-color="#F5F5F5"/>
+      <stop offset="60%" stop-color="#B0BEC5"/>
+      <stop offset="100%" stop-color="#757575"/>
+    </radialGradient>
+    <filter id="glowSilver" x="-10" y="-10" width="70" height="70" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadowSilver" x="0" y="0" width="50" height="50" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="25" cy="25" r="23" fill="#ff1a1a"/>
+  <!-- Silver star in foreground with shadow and glow -->
+  <g filter="url(#shadowSilver)">
+    <polygon points="25,4 31.18,17.09 45,18.18 34,28.09 37.36,42 25,34.5 12.64,42 16,28.09 5,18.18 18.82,17.09" fill="url(#starGradientSilver)" stroke="#F5F5F5" stroke-width="2" filter="url(#glowSilver)"/>
+  </g>
+</svg>
