@@ -83,23 +83,40 @@ const HomePage = () => {
       // Fetch recent photos from friends
       const { data: feedPhotos } = await supabase
         .from('photos')
-        .select(`
-          id, url, thumbnail_url, species_id, user_id, created_at,
-          user_profiles!inner(display_name)
-        `)
+        .select('id, url, thumbnail_url, species_id, user_id, created_at')
         .in('user_id', friendIds)
         .in('privacy', ['public', 'friends'])
         .order('created_at', { ascending: false })
         .limit(6);
 
-      const transformedPhotos: FeedPhoto[] = (feedPhotos || []).map(photo => ({
-        ...photo,
-        user_profile: {
-          display_name: (photo.user_profiles as any).display_name,
-        },
-      }));
+      if (feedPhotos && feedPhotos.length > 0) {
+        // Get user profiles for the photo owners
+        const userIds = [...new Set(feedPhotos.map(p => p.user_id))];
+        const { data: userProfiles } = await supabase
+          .from('user_profiles')
+          .select('user_id, display_name')
+          .in('user_id', userIds);
 
-      setRecentFeedPhotos(transformedPhotos);
+        // Create a map for quick user profile lookup
+        const userProfilesMap = userProfiles?.reduce((acc, profile) => {
+          acc[profile.user_id] = profile;
+          return acc;
+        }, {} as {[key: string]: any}) || {};
+
+        const transformedPhotos: FeedPhoto[] = feedPhotos.map(photo => {
+          const userProfile = userProfilesMap[photo.user_id];
+          return {
+            ...photo,
+            user_profile: {
+              display_name: userProfile?.display_name || 'Unknown User',
+            },
+          };
+        });
+
+        setRecentFeedPhotos(transformedPhotos);
+      } else {
+        setRecentFeedPhotos([]);
+      }
     } catch (error) {
       console.error('Error fetching feed photos:', error);
     }

@@ -103,19 +103,29 @@ const FeedPage = () => {
         return;
       }
 
-      // Fetch photos from friends with user profiles
+      // Fetch photos from friends
       const { data: feedPhotos, error } = await supabase
         .from('photos')
-        .select(`
-          id, url, thumbnail_url, species_id, user_id, privacy, created_at,
-          user_profiles!inner(display_name, email)
-        `)
+        .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at')
         .in('user_id', friendIds)
         .in('privacy', ['public', 'friends']) // Respect privacy
         .order('created_at', { ascending: false })
         .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
 
       if (error) throw error;
+
+      // Get user profiles for the photo owners
+      const userIds = [...new Set(feedPhotos?.map(p => p.user_id) || [])];
+      const { data: userProfiles } = await supabase
+        .from('user_profiles')
+        .select('user_id, display_name, email')
+        .in('user_id', userIds);
+
+      // Create a map for quick user profile lookup
+      const userProfilesMap = userProfiles?.reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as {[key: string]: any}) || {};
 
       // Get comment counts for each photo
       const photoIds = feedPhotos?.map(p => p.id) || [];
@@ -134,15 +144,18 @@ const FeedPage = () => {
       }
 
       // Transform data to match our interface
-      const transformedPhotos: FeedPhoto[] = (feedPhotos || []).map(photo => ({
-        ...photo,
-        user_profile: {
-          display_name: (photo.user_profiles as any).display_name,
-          email: (photo.user_profiles as any).email,
-        },
-        comments: [],
-        comment_count: commentCountsMap[photo.id] || 0,
-      }));
+      const transformedPhotos: FeedPhoto[] = (feedPhotos || []).map(photo => {
+        const userProfile = userProfilesMap[photo.user_id];
+        return {
+          ...photo,
+          user_profile: {
+            display_name: userProfile?.display_name || 'Unknown User',
+            email: userProfile?.email || '',
+          },
+          comments: [],
+          comment_count: commentCountsMap[photo.id] || 0,
+        };
+      });
 
       if (reset || pageNum === 0) {
         setPhotos(transformedPhotos);
@@ -171,21 +184,34 @@ const FeedPage = () => {
   const fetchComments = async (photoId: string) => {
     const { data: comments } = await supabase
       .from('comments')
-      .select(`
-        id, content, created_at, user_id,
-        user_profiles!inner(display_name, email)
-      `)
+      .select('id, content, created_at, user_id')
       .eq('photo_id', photoId)
       .order('created_at', { ascending: true });
 
-    if (comments) {
-      const transformedComments: FeedComment[] = comments.map(comment => ({
-        ...comment,
-        user_profile: {
-          display_name: (comment.user_profiles as any).display_name,
-          email: (comment.user_profiles as any).email,
-        },
-      }));
+    if (comments && comments.length > 0) {
+      // Get user profiles for comment authors
+      const userIds = [...new Set(comments.map(c => c.user_id))];
+      const { data: userProfiles } = await supabase
+        .from('user_profiles')
+        .select('user_id, display_name, email')
+        .in('user_id', userIds);
+
+      // Create a map for quick user profile lookup
+      const userProfilesMap = userProfiles?.reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as {[key: string]: any}) || {};
+
+      const transformedComments: FeedComment[] = comments.map(comment => {
+        const userProfile = userProfilesMap[comment.user_id];
+        return {
+          ...comment,
+          user_profile: {
+            display_name: userProfile?.display_name || 'Unknown User',
+            email: userProfile?.email || '',
+          },
+        };
+      });
 
       setPhotos(prev => prev.map(photo => 
         photo.id === photoId 
