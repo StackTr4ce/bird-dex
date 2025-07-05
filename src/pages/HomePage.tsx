@@ -92,9 +92,9 @@ const HomePage = () => {
           if (vb !== va) return vb - va;
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         });
-        top10Ids = sorted.slice(0, 10).map(e => e.user_id);
+        top10Ids = sorted.length > 0 ? [sorted[0].user_id] : [];
       }
-      // Show top10 or participation award for ended quests
+      // Show winner or participation award for ended quests
       const type = top10Ids.includes(user.id) ? 'top10' : 'participation';
       awards.push({
         quest_id: quest.id,
