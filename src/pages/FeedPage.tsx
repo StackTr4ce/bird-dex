@@ -14,6 +14,8 @@ import {
   IconButton,
   Collapse,
   Divider,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Comment as CommentIcon,
@@ -64,6 +66,7 @@ const FeedPage = () => {
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [newComments, setNewComments] = useState<{[key: string]: string}>({});
   const [commenting, setCommenting] = useState<Set<string>>(new Set());
+  const [currentTab, setCurrentTab] = useState<'friends' | 'my'>('friends');
 
   // Get user's friends
   const getUserFriends = useCallback(async () => {
@@ -93,24 +96,43 @@ const FeedPage = () => {
     else setLoadingMore(true);
 
     try {
-      const friendIds = await getUserFriends();
-      
-      if (friendIds.length === 0) {
-        setPhotos([]);
-        setHasMore(false);
-        setLoading(false);
-        setLoadingMore(false);
-        return;
-      }
+      let feedPhotos;
+      let error;
 
-      // Fetch photos from friends
-      const { data: feedPhotos, error } = await supabase
-        .from('photos')
-        .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at')
-        .in('user_id', friendIds)
-        .in('privacy', ['public', 'friends']) // Respect privacy
-        .order('created_at', { ascending: false })
-        .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
+      if (currentTab === 'friends') {
+        // Fetch friends' photos
+        const friendIds = await getUserFriends();
+        
+        if (friendIds.length === 0) {
+          setPhotos([]);
+          setHasMore(false);
+          setLoading(false);
+          setLoadingMore(false);
+          return;
+        }
+
+        const response = await supabase
+          .from('photos')
+          .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at')
+          .in('user_id', friendIds)
+          .in('privacy', ['public', 'friends']) // Respect privacy
+          .order('created_at', { ascending: false })
+          .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
+        
+        feedPhotos = response.data;
+        error = response.error;
+      } else {
+        // Fetch user's own photos (all privacy levels since it's their own)
+        const response = await supabase
+          .from('photos')
+          .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
+        
+        feedPhotos = response.data;
+        error = response.error;
+      }
 
       if (error) throw error;
 
@@ -171,7 +193,7 @@ const FeedPage = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [user, getUserFriends]);
+  }, [user, getUserFriends, currentTab]);
 
   // Load more photos
   const loadMore = () => {
@@ -292,9 +314,21 @@ const FeedPage = () => {
     return date.toLocaleDateString();
   };
 
+  // Handle tab change
+  const handleTabChange = (newTab: 'friends' | 'my') => {
+    if (newTab !== currentTab) {
+      setCurrentTab(newTab);
+      setPhotos([]);
+      setPage(0);
+      setHasMore(true);
+      setExpandedComments(new Set());
+      setNewComments({});
+    }
+  };
+
   useEffect(() => {
     fetchPhotos(0, true);
-  }, [fetchPhotos]);
+  }, [fetchPhotos, currentTab]);
 
   if (loading) {
     return (
@@ -309,8 +343,30 @@ const FeedPage = () => {
       <Typography variant="h4" fontWeight={700} gutterBottom>
         Photo Feed
       </Typography>
+      
+      {/* Tabs */}
+      <Tabs 
+        value={currentTab} 
+        onChange={(_, newValue) => handleTabChange(newValue)}
+        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Tab 
+          label="Friends' Photos" 
+          value="friends" 
+          sx={{ textTransform: 'none', fontWeight: 600 }}
+        />
+        <Tab 
+          label="My Photos" 
+          value="my" 
+          sx={{ textTransform: 'none', fontWeight: 600 }}
+        />
+      </Tabs>
+
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        See your friends' latest bird photo uploads
+        {currentTab === 'friends' 
+          ? "See your friends' latest bird photo uploads"
+          : "View all your uploaded bird photos and comments"
+        }
       </Typography>
 
       {photos.length === 0 ? (
@@ -319,7 +375,10 @@ const FeedPage = () => {
             No photos to show
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Add some friends to see their photos here!
+            {currentTab === 'friends' 
+              ? "Add some friends to see their photos here!"
+              : "Upload some bird photos to see them here!"
+            }
           </Typography>
         </Box>
       ) : (
