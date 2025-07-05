@@ -1,9 +1,423 @@
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  CardActions,
+  TextField,
+  Button,
+  Avatar,
+  Chip,
+  CircularProgress,
+  Stack,
+  IconButton,
+  Collapse,
+  Divider,
+} from '@mui/material';
+import {
+  Comment as CommentIcon,
+  Send as SendIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+} from '@mui/icons-material';
+import { supabase } from '../supabaseClient';
+import { useAuth } from '../components/AuthProvider';
+import SupabaseImage from '../components/SupabaseImage';
+
+interface FeedPhoto {
+  id: string;
+  url: string;
+  thumbnail_url?: string;
+  species_id: string;
+  user_id: string;
+  privacy: 'public' | 'friends' | 'private';
+  created_at: string;
+  user_profile: {
+    display_name: string;
+    email: string;
+  };
+  comments: FeedComment[];
+  comment_count: number;
+}
+
+interface FeedComment {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+  user_profile: {
+    display_name: string;
+    email: string;
+  };
+}
+
+const ITEMS_PER_PAGE = 10;
+
 const FeedPage = () => {
+  const { user } = useAuth();
+  const [photos, setPhotos] = useState<FeedPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [newComments, setNewComments] = useState<{[key: string]: string}>({});
+  const [commenting, setCommenting] = useState<Set<string>>(new Set());
+
+  // Get user's friends
+  const getUserFriends = useCallback(async () => {
+    if (!user) return [];
+    
+    const { data: friendships } = await supabase
+      .from('friendships')
+      .select('requester, addressee')
+      .or(`requester.eq.${user.id},addressee.eq.${user.id}`)
+      .eq('status', 'accepted');
+
+    if (!friendships) return [];
+
+    // Extract friend IDs (exclude current user)
+    const friendIds = friendships.map(friendship => 
+      friendship.requester === user.id ? friendship.addressee : friendship.requester
+    );
+
+    return friendIds;
+  }, [user]);
+
+  // Fetch photos from friends
+  const fetchPhotos = useCallback(async (pageNum: number = 0, reset: boolean = false) => {
+    if (!user) return;
+
+    if (pageNum === 0) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const friendIds = await getUserFriends();
+      
+      if (friendIds.length === 0) {
+        setPhotos([]);
+        setHasMore(false);
+        setLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+
+      // Fetch photos from friends with user profiles
+      const { data: feedPhotos, error } = await supabase
+        .from('photos')
+        .select(`
+          id, url, thumbnail_url, species_id, user_id, privacy, created_at,
+          user_profiles!inner(display_name, email)
+        `)
+        .in('user_id', friendIds)
+        .in('privacy', ['public', 'friends']) // Respect privacy
+        .order('created_at', { ascending: false })
+        .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
+
+      if (error) throw error;
+
+      // Get comment counts for each photo
+      const photoIds = feedPhotos?.map(p => p.id) || [];
+      let commentCountsMap: {[key: string]: number} = {};
+      
+      if (photoIds.length > 0) {
+        const { data: commentCounts } = await supabase
+          .from('comments')
+          .select('photo_id')
+          .in('photo_id', photoIds);
+        
+        // Count comments for each photo
+        commentCounts?.forEach(comment => {
+          commentCountsMap[comment.photo_id] = (commentCountsMap[comment.photo_id] || 0) + 1;
+        });
+      }
+
+      // Transform data to match our interface
+      const transformedPhotos: FeedPhoto[] = (feedPhotos || []).map(photo => ({
+        ...photo,
+        user_profile: {
+          display_name: (photo.user_profiles as any).display_name,
+          email: (photo.user_profiles as any).email,
+        },
+        comments: [],
+        comment_count: commentCountsMap[photo.id] || 0,
+      }));
+
+      if (reset || pageNum === 0) {
+        setPhotos(transformedPhotos);
+      } else {
+        setPhotos(prev => [...prev, ...transformedPhotos]);
+      }
+
+      setHasMore(transformedPhotos.length === ITEMS_PER_PAGE);
+      setPage(pageNum);
+    } catch (error) {
+      console.error('Error fetching feed:', error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [user, getUserFriends]);
+
+  // Load more photos
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      fetchPhotos(page + 1);
+    }
+  };
+
+  // Fetch comments for a specific photo
+  const fetchComments = async (photoId: string) => {
+    const { data: comments } = await supabase
+      .from('comments')
+      .select(`
+        id, content, created_at, user_id,
+        user_profiles!inner(display_name, email)
+      `)
+      .eq('photo_id', photoId)
+      .order('created_at', { ascending: true });
+
+    if (comments) {
+      const transformedComments: FeedComment[] = comments.map(comment => ({
+        ...comment,
+        user_profile: {
+          display_name: (comment.user_profiles as any).display_name,
+          email: (comment.user_profiles as any).email,
+        },
+      }));
+
+      setPhotos(prev => prev.map(photo => 
+        photo.id === photoId 
+          ? { ...photo, comments: transformedComments }
+          : photo
+      ));
+    }
+  };
+
+  // Toggle comments visibility
+  const toggleComments = async (photoId: string) => {
+    const newExpanded = new Set(expandedComments);
+    
+    if (expandedComments.has(photoId)) {
+      newExpanded.delete(photoId);
+    } else {
+      newExpanded.add(photoId);
+      // Fetch comments if not already loaded
+      const photo = photos.find(p => p.id === photoId);
+      if (photo && photo.comments.length === 0 && photo.comment_count > 0) {
+        await fetchComments(photoId);
+      }
+    }
+    
+    setExpandedComments(newExpanded);
+  };
+
+  // Add a new comment
+  const addComment = async (photoId: string) => {
+    const content = newComments[photoId]?.trim();
+    if (!content || !user) return;
+
+    setCommenting(prev => new Set([...prev, photoId]));
+
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .insert({
+          photo_id: photoId,
+          user_id: user.id,
+          content: content,
+        });
+
+      if (error) throw error;
+
+      // Clear the comment input
+      setNewComments(prev => ({ ...prev, [photoId]: '' }));
+      
+      // Refresh comments for this photo
+      await fetchComments(photoId);
+      
+      // Update comment count
+      setPhotos(prev => prev.map(photo => 
+        photo.id === photoId 
+          ? { ...photo, comment_count: photo.comment_count + 1 }
+          : photo
+      ));
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    } finally {
+      setCommenting(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(photoId);
+        return newSet;
+      });
+    }
+  };
+
+  // Format relative time
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 48) return 'Yesterday';
+    return date.toLocaleDateString();
+  };
+
+  useEffect(() => {
+    fetchPhotos(0, true);
+  }, [fetchPhotos]);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <div>
-      <h1>Photo Feed</h1>
-      <p>See your friends' latest bird photo uploads and comments.</p>
-    </div>
+    <Box sx={{ maxWidth: 600, mx: 'auto', p: { xs: 1, sm: 2, md: 3 } }}>
+      <Typography variant="h4" fontWeight={700} gutterBottom>
+        Photo Feed
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+        See your friends' latest bird photo uploads
+      </Typography>
+
+      {photos.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6" color="text.secondary">
+            No photos to show
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Add some friends to see their photos here!
+          </Typography>
+        </Box>
+      ) : (
+        <Stack spacing={3}>
+          {photos.map((photo) => (
+            <Card key={photo.id} elevation={2}>
+              {/* Header */}
+              <CardContent sx={{ pb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                    {photo.user_profile.display_name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      {photo.user_profile.display_name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatRelativeTime(photo.created_at)}
+                    </Typography>
+                  </Box>
+                  <Chip 
+                    label={photo.species_id} 
+                    size="small" 
+                    variant="outlined"
+                  />
+                </Box>
+                
+                {/* Photo */}
+                <Box sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden' }}>
+                  <SupabaseImage
+                    path={photo.thumbnail_url || photo.url}
+                    alt={`${photo.species_id} by ${photo.user_profile.display_name}`}
+                    style={{ 
+                      width: '100%', 
+                      maxHeight: 400, 
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                  />
+                </Box>
+              </CardContent>
+
+              {/* Actions */}
+              <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
+                <Button
+                  startIcon={<CommentIcon />}
+                  endIcon={expandedComments.has(photo.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  onClick={() => toggleComments(photo.id)}
+                  size="small"
+                >
+                  {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
+                </Button>
+              </CardActions>
+
+              {/* Comments Section */}
+              <Collapse in={expandedComments.has(photo.id)}>
+                <Divider />
+                <CardContent sx={{ pt: 2 }}>
+                  {/* Existing Comments */}
+                  {photo.comments.map((comment) => (
+                    <Box key={comment.id} sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                          {comment.user_profile.display_name.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant="body2">
+                            <strong>{comment.user_profile.display_name}</strong> {comment.content}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatRelativeTime(comment.created_at)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  ))}
+
+                  {/* Add Comment */}
+                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Add a comment..."
+                      value={newComments[photo.id] || ''}
+                      onChange={(e) => setNewComments(prev => ({ ...prev, [photo.id]: e.target.value }))}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          addComment(photo.id);
+                        }
+                      }}
+                    />
+                    <IconButton
+                      onClick={() => addComment(photo.id)}
+                      disabled={!newComments[photo.id]?.trim() || commenting.has(photo.id)}
+                      color="primary"
+                    >
+                      {commenting.has(photo.id) ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <SendIcon />
+                      )}
+                    </IconButton>
+                  </Box>
+                </CardContent>
+              </Collapse>
+            </Card>
+          ))}
+
+          {/* Load More */}
+          {hasMore && (
+            <Box sx={{ textAlign: 'center', py: 2 }}>
+              <Button
+                onClick={loadMore}
+                disabled={loadingMore}
+                variant="outlined"
+              >
+                {loadingMore ? <CircularProgress size={20} /> : 'Load More'}
+              </Button>
+            </Box>
+          )}
+        </Stack>
+      )}
+    </Box>
   );
 };
 
