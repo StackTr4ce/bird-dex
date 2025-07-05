@@ -339,8 +339,8 @@ const FeedPage = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', p: { xs: 1, sm: 2, md: 3 } }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
+    <Box>
+      <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
         Photo Feed
       </Typography>
       

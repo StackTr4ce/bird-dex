@@ -178,11 +178,11 @@ const LeaderboardPage = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto', p: { xs: 2, sm: 3 } }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
-        🏆 Leaderboard
+    <Box>
+      <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
+        Leaderboard
       </Typography>
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+      <Typography align="left" variant="subtitle1" color="text.secondary" gutterBottom sx={{ pb: 1 }}>
         Rankings based on unique bird species photographed
       </Typography>
 

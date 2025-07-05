@@ -80,13 +80,11 @@ const SpeciesPage = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh', boxSizing: 'border-box', overflowX: 'hidden' }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
+    <Box>
+      <Typography align="left" variant="h4" fontWeight={700} gutterBottom sx={{ pb: 2 }}>
         Species: {speciesName}
       </Typography>
-      <Typography variant="subtitle1" color="text.secondary">
-        Manage your photos for this species. Select your top photo below.
-      </Typography>
+
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
           <CircularProgress />

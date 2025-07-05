@@ -8,8 +8,8 @@ import PhotoUpload from '../components/PhotoUpload';
 
 const MyUploadsPage = () => {
   return (
-    <Box sx={{ maxWidth: 1400, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, alignItems: 'flex-start', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
+    <Box>
+      <Typography align="left" variant="h4" fontWeight={700} gutterBottom sx={{ pb: 1 }}>
         My Uploads
       </Typography>
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, mb: 3, width: '100%', maxWidth: 600 }}>

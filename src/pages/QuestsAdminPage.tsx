@@ -139,8 +139,8 @@ const uploadAwardImage = async (file: File, questName: string, type: 'top10' | '
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 1, sm: 2, md: 3 }, minHeight: '100vh' }}>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
+    <Box>
+      <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
         Quests Admin
       </Typography>
       <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={() => handleOpenDialog()}>
