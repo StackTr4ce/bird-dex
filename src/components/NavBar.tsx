@@ -8,6 +8,7 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import LogoutIcon from '@mui/icons-material/Logout';
 import Stack from '@mui/material/Stack';
 import HomeIcon from '@mui/icons-material/Home';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -16,7 +17,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import FlagIcon from '@mui/icons-material/Flag';
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider } from '@mui/material';
+import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, Avatar, Tooltip } from '@mui/material';
 import { useState } from 'react';
 
 const navLinks = [
@@ -87,17 +88,45 @@ const NavBar = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {user ? (
             <>
-              <Button
-                component={Link}
-                to="/profile"
-                color="inherit"
-                sx={{ textTransform: 'none', fontWeight: 500, mr: 1 }}
-              >
-                Signed in as {user.email}
-              </Button>
-              <Button variant="outlined" color="primary" size="small" onClick={signOut} disabled={loading} sx={{ ml: 1, fontWeight: 700 }}>
-                Sign Out
-              </Button>
+              <Tooltip title={user.email} arrow>
+                <Avatar 
+                  component={Link}
+                  to="/profile"
+                  sx={{ 
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    width: 36,
+                    height: 36,
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                      color: 'white',
+                      transform: 'scale(1.05)',
+                      boxShadow: 2
+                    }
+                  }}
+                >
+                  {user.email?.charAt(0).toUpperCase()}
+                </Avatar>
+              </Tooltip>
+              <Tooltip title="Sign Out" arrow>
+                <IconButton 
+                  onClick={signOut} 
+                  disabled={loading}
+                  color="inherit"
+                  sx={{ 
+                    ml: 1,
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                    }
+                  }}
+                >
+                  <LogoutIcon />
+                </IconButton>
+              </Tooltip>
             </>
           ) : (
             <Button component={Link} to="/login" color="primary" variant="contained" size="small" sx={{ fontWeight: 700 }}>Login</Button>
