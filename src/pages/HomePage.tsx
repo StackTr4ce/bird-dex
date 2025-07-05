@@ -189,7 +189,7 @@ const HomePage = () => {
           </Box>
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
-          Click "Login" in the navigation to get started!
+          Click "Login" in the navigation to get started.
         </Typography>
       </Box>
     );
