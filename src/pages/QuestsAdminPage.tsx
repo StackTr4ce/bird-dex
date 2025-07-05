@@ -159,7 +159,7 @@ const uploadAwardImage = async (file: File, questName: string, type: 'top10' | '
                 <TableCell>Description</TableCell>
                 <TableCell>Start</TableCell>
                 <TableCell>End</TableCell>
-                <TableCell>Top 10 Award</TableCell>
+                <TableCell>Winner Award</TableCell>
                 <TableCell>Participation Award</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -172,7 +172,7 @@ const uploadAwardImage = async (file: File, questName: string, type: 'top10' | '
                   <TableCell>{new Date(q.start_time).toLocaleString()}</TableCell>
                   <TableCell>{new Date(q.end_time).toLocaleString()}</TableCell>
                   <TableCell>
-                    {q.top10_award_url && <img src={q.top10_award_url} alt="Top 10 Award" style={{ width: 48, height: 48, objectFit: 'contain' }} />}
+                    {q.top10_award_url && <img src={q.top10_award_url} alt="Winner Award" style={{ width: 48, height: 48, objectFit: 'contain' }} />}
                   </TableCell>
                   <TableCell>
                     {q.participation_award_url && <img src={q.participation_award_url} alt="Participation Award" style={{ width: 48, height: 48, objectFit: 'contain' }} />}
@@ -212,9 +212,9 @@ const uploadAwardImage = async (file: File, questName: string, type: 'top10' | '
               fullWidth
             />
             <Box>
-              <Typography variant="subtitle2">Top 10 Award Image</Typography>
+              <Typography variant="subtitle2">Winner Award Image</Typography>
               <input type="file" accept="image/*" onChange={e => handleFileChange('top10', e.target.files?.[0] || null)} />
-              {form.top10_award_url && <img src={form.top10_award_url} alt="Top 10 Award" style={{ width: 48, height: 48, objectFit: 'contain', marginTop: 4 }} />}
+              {form.top10_award_url && <img src={form.top10_award_url} alt="Winner Award" style={{ width: 48, height: 48, objectFit: 'contain', marginTop: 4 }} />}
             </Box>
             <Box>
               <Typography variant="subtitle2">Participation Award Image</Typography>

@@ -184,7 +184,7 @@ const QuestDetailPage = () => {
         <Typography variant="h4" fontWeight={700} gutterBottom>{quest.name}</Typography>
         <Typography variant="subtitle1" gutterBottom>{quest.description}</Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-          {quest.top10_award_url && <Chip avatar={<Avatar src={quest.top10_award_url} />} label="Top 10 Award" />}
+          {quest.top10_award_url && <Chip avatar={<Avatar src={quest.top10_award_url} />} label="Winner Award" />}
           {quest.participation_award_url && <Chip avatar={<Avatar src={quest.participation_award_url} />} label="Participation Award" />}
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -264,7 +264,7 @@ const QuestDetailPage = () => {
       <Typography variant="h4" fontWeight={700} gutterBottom>{quest.name}</Typography>
       <Typography variant="subtitle1" gutterBottom>{quest.description}</Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-        {quest.top10_award_url && <Chip avatar={<Avatar src={quest.top10_award_url} />} label="Top 10 Award" />}
+        {quest.top10_award_url && <Chip avatar={<Avatar src={quest.top10_award_url} />} label="Winner Award" />}
         {quest.participation_award_url && <Chip avatar={<Avatar src={quest.participation_award_url} />} label="Participation Award" />}
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

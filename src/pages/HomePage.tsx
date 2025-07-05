@@ -75,7 +75,7 @@ const HomePage = () => {
       if (new Date(quest.end_time) > now) continue;
       // Get all entries for this quest
       const { data: allEntries } = await supabase.from('quest_entries').select('id,user_id,quest_id').eq('quest_id', quest.id);
-      // Get top 10 (by votes, fallback to created_at)
+      // Get winner (by votes, fallback to created_at)
       let top10Ids: string[] = [];
       if (allEntries && allEntries.length > 0) {
         // Get votes for each entry
@@ -350,14 +350,14 @@ const HomePage = () => {
                         <Tooltip key={award.quest_id + idx} title={<>
                           <Typography variant="subtitle2" fontWeight={700}>{award.quest_name}</Typography>
                           <Typography variant="caption" color={award.type === 'top10' ? 'warning.main' : 'text.secondary'}>
-                            {award.type === 'top10' ? 'Top 10 Award' : 'Participation Award'}
+                            {award.type === 'top10' ? 'Winner Award' : 'Participation Award'}
                           </Typography><br/>
                           <Typography variant="caption">{award.quest_description}</Typography><br/>
                           <Typography variant="caption">{new Date(award.quest_date).toLocaleDateString()}</Typography>
                         </>} arrow>
                           <Avatar
                             src={imgSrc}
-                            alt={award.type === 'top10' ? 'Top 10 Award' : 'Participation Award'}
+                            alt={award.type === 'top10' ? 'Winner Award' : 'Participation Award'}
                             sx={{ width: 50, height: 50, cursor: 'pointer', border: award.type === 'top10' ? '2px solid #FFD700' : '2px solid #B0BEC5', boxShadow: 2, background: 'transparent' }}
                             onClick={() => navigate(`/quests/${award.quest_id}`)}
                           />
