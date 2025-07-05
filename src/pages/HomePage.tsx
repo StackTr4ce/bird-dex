@@ -6,6 +6,7 @@ import {
   CardContent,
   Button,
   Chip,
+  CircularProgress,
 } from '@mui/material';
 import {
   PhotoLibrary as PhotoLibraryIcon,
@@ -53,10 +54,12 @@ const HomePage = () => {
   const [userStats, setUserStats] = useState<UserStats>({ uniqueSpecies: 0, totalPhotos: 0 });
   const [recentFeedPhotos, setRecentFeedPhotos] = useState<FeedPhoto[]>([]);
   const [userAwards, setUserAwards] = useState<UserAward[]>([]);
+  const [awardsLoading, setAwardsLoading] = useState(false);
   const [awardPage, setAwardPage] = useState(0);
   const AWARDS_PER_PAGE = 1;
   // Fetch user quest awards
   const fetchUserAwards = async () => {
+    setAwardsLoading(true);
     if (!user) return;
     // Get all quests
     const { data: quests } = await supabase.from('quests').select('*');
@@ -107,6 +110,7 @@ const HomePage = () => {
       });
     }
     setUserAwards(awards);
+    setAwardsLoading(false);
   };
 
   // Fetch user stats
@@ -329,9 +333,15 @@ const HomePage = () => {
             </Box>
             {/* Content */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', mb: 2 }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', py: 2 }}>
-                {userAwards.length === 0 ? (
-                  <Box sx={{ textAlign: 'center', py: 2 }}>
+              {/* Fixed height box to prevent resizing after loading */}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', py: 2, minHeight: 90, alignItems: 'center' }}>
+                {awardsLoading ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 50, height: 50, justifyContent: 'center' }}>
+                    <CircularProgress size={36} sx={{ mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">Loading awards…</Typography>
+                  </Box>
+                ) : userAwards.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', width: 50, height: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <Typography variant="body2" color="text.secondary">
                       No awards yet
                     </Typography>
