@@ -75,63 +75,90 @@ function App() {
         <NavBar />
         {/* Spacer for fixed NavBar */}
         <Box sx={{ height: { xs: 56, sm: 64 }, width: '100%' }} />
-        <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/grid" element={
-              <ProtectedRoute>
-                <PhotoGridPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/species/:speciesId" element={
-              <ProtectedRoute>
+        <Routes>
+          {/* Full-width routes (outside Container) */}
+          <Route path="/grid" element={
+            <ProtectedRoute>
+              <PhotoGridPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* Constrained routes (inside Container) */}
+          <Route path="/" element={
+            <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <HomePage />
+            </Container>
+          } />
+          <Route path="/login" element={
+            <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
+              <LoginPage />
+            </Container>
+          } />
+          <Route path="/species/:speciesId" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <SpeciesPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/leaderboard" element={
-              <ProtectedRoute>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="/leaderboard" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <LeaderboardPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/friends" element={
-              <ProtectedRoute>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="/friends" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <FriendsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/feed" element={
-              <ProtectedRoute>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="/feed" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <FeedPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/my-uploads" element={
-              <ProtectedRoute>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="/my-uploads" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <MyUploadsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/quests" element={
-              <ProtectedRoute>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="/quests" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <QuestsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/quests/:questId" element={
-              <ProtectedRoute>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="/quests/:questId" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <QuestDetailPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/quests-admin" element={
-              <ProtectedRoute>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="/quests-admin" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <QuestsAdminPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Container maxWidth="md" sx={{ mt: 3, mb: 4 }}>
                 <UserProfilePage />
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </Container>
+              </Container>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </Router>
     </ThemeProvider>
   );
