@@ -273,125 +273,136 @@ const HomePage = () => {
         mb: 3 
       }}>
         {/* User Score & Photo Grid */}
-        <Card elevation={2}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'stretch' }}>
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2 }}>
+            {/* Title Row */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, minHeight: 40 }}>
               <PhotoLibraryIcon sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6" fontWeight={600}>
                 Your Collection
               </Typography>
             </Box>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" fontWeight={700} color="primary.main">
-                  {userStats.uniqueSpecies}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Unique Species
-                </Typography>
-              </Box>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" fontWeight={700} color="secondary.main">
-                  {userStats.totalPhotos}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Photos
-                </Typography>
+            {/* Content */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+                <Box sx={{ textAlign: 'center', flex: 1, p: 1 }}>
+                  <Typography variant="h3" fontWeight={700} color="primary.main">
+                    {userStats.uniqueSpecies}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Unique Species
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', flex: 1, p: 1 }}>
+                  <Typography variant="h3" fontWeight={700} color="secondary.main">
+                    {userStats.totalPhotos}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Total Photos
+                  </Typography>
+                </Box>
               </Box>
             </Box>
-
-            <Button
-              variant="contained"
-              fullWidth
-              startIcon={<PhotoLibraryIcon />}
-              onClick={() => navigate('/grid')}
-            >
-              View Photo Grid
-            </Button>
+            {/* Button Row (bottom aligned) */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', minHeight: 40 }}>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<PhotoLibraryIcon />}
+                onClick={() => navigate('/grid')}
+              >
+                View Photo Grid
+              </Button>
+            </Box>
           </CardContent>
         </Card>
 
         {/* Awards Section */}
-        <Card elevation={2}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'stretch' }}>
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2 }}>
+            {/* Title Row */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, minHeight: 40 }}>
               <TrophyIcon sx={{ mr: 1, color: 'warning.main' }} />
               <Typography variant="h6" fontWeight={600}>
                 Your Awards
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', py: 2 }}>
-              {userAwards.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    No awards yet
+            {/* Content */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', mb: 2 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center', py: 2 }}>
+                {userAwards.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No awards yet
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Participate in quests to earn awards!
+                    </Typography>
+                  </Box>
+                ) : (
+                  userAwards
+                    .slice(awardPage * AWARDS_PER_PAGE, awardPage * AWARDS_PER_PAGE + AWARDS_PER_PAGE)
+                    .map((award, idx) => {
+                      let imgSrc = award.type === 'top10'
+                        ? (award.top10_award_url || rewardStarGold)
+                        : (award.participation_award_url || rewardStarSilver);
+                      return (
+                        <Tooltip key={award.quest_id + idx} title={<>
+                          <Typography variant="subtitle2" fontWeight={700}>{award.quest_name}</Typography>
+                          <Typography variant="caption" color={award.type === 'top10' ? 'warning.main' : 'text.secondary'}>
+                            {award.type === 'top10' ? 'Top 10 Award' : 'Participation Award'}
+                          </Typography><br/>
+                          <Typography variant="caption">{award.quest_description}</Typography><br/>
+                          <Typography variant="caption">{new Date(award.quest_date).toLocaleDateString()}</Typography>
+                        </>} arrow>
+                          <Avatar
+                            src={imgSrc}
+                            alt={award.type === 'top10' ? 'Top 10 Award' : 'Participation Award'}
+                            sx={{ width: 50, height: 50, cursor: 'pointer', border: award.type === 'top10' ? '2px solid #FFD700' : '2px solid #B0BEC5', boxShadow: 2, background: 'transparent' }}
+                            onClick={() => navigate(`/quests/${award.quest_id}`)}
+                          />
+                        </Tooltip>
+                      );
+                    })
+                )}
+              </Box>
+              {/* Pagination Controls */}
+              {userAwards.length > AWARDS_PER_PAGE && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                  <Button
+                    size="small"
+                    variant="text"
+                    sx={{ minWidth: 0, px: 1, fontSize: 20, lineHeight: 1 }}
+                    disabled={awardPage === 0}
+                    onClick={() => setAwardPage(p => Math.max(0, p - 1))}
+                  >
+                    ‹
+                  </Button>
+                  <Typography variant="caption" sx={{ minWidth: 24, textAlign: 'center' }}>
+                    {awardPage + 1}/{Math.ceil(userAwards.length / AWARDS_PER_PAGE)}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Participate in quests to earn awards!
-                  </Typography>
+                  <Button
+                    size="small"
+                    variant="text"
+                    sx={{ minWidth: 0, px: 1, fontSize: 20, lineHeight: 1 }}
+                    disabled={awardPage >= Math.ceil(userAwards.length / AWARDS_PER_PAGE) - 1}
+                    onClick={() => setAwardPage(p => Math.min(Math.ceil(userAwards.length / AWARDS_PER_PAGE) - 1, p + 1))}
+                  >
+                    ›
+                  </Button>
                 </Box>
-              ) : (
-                userAwards
-                  .slice(awardPage * AWARDS_PER_PAGE, awardPage * AWARDS_PER_PAGE + AWARDS_PER_PAGE)
-                  .map((award, idx) => {
-                    let imgSrc = award.type === 'top10'
-                      ? (award.top10_award_url || rewardStarGold)
-                      : (award.participation_award_url || rewardStarSilver);
-                    return (
-                      <Tooltip key={award.quest_id + idx} title={<>
-                        <Typography variant="subtitle2" fontWeight={700}>{award.quest_name}</Typography>
-                        <Typography variant="caption" color={award.type === 'top10' ? 'warning.main' : 'text.secondary'}>
-                          {award.type === 'top10' ? 'Top 10 Award' : 'Participation Award'}
-                        </Typography><br/>
-                        <Typography variant="caption">{award.quest_description}</Typography><br/>
-                        <Typography variant="caption">{new Date(award.quest_date).toLocaleDateString()}</Typography>
-                      </>} arrow>
-                        <Avatar
-                          src={imgSrc}
-                          alt={award.type === 'top10' ? 'Top 10 Award' : 'Participation Award'}
-                          sx={{ width: 50, height: 50, cursor: 'pointer', border: award.type === 'top10' ? '2px solid #FFD700' : '2px solid #B0BEC5', boxShadow: 2, background: 'transparent' }}
-                          onClick={() => navigate(`/quests/${award.quest_id}`)}
-                        />
-                      </Tooltip>
-                    );
-                  })
               )}
             </Box>
-            {/* Pagination Controls */}
-            {userAwards.length > AWARDS_PER_PAGE && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                <Button
-                  size="small"
-                  variant="text"
-                  sx={{ minWidth: 0, px: 1, fontSize: 20, lineHeight: 1 }}
-                  disabled={awardPage === 0}
-                  onClick={() => setAwardPage(p => Math.max(0, p - 1))}
-                >
-                  ‹
-                </Button>
-                <Typography variant="caption" sx={{ minWidth: 24, textAlign: 'center' }}>
-                  {awardPage + 1}/{Math.ceil(userAwards.length / AWARDS_PER_PAGE)}
-                </Typography>
-                <Button
-                  size="small"
-                  variant="text"
-                  sx={{ minWidth: 0, px: 1, fontSize: 20, lineHeight: 1 }}
-                  disabled={awardPage >= Math.ceil(userAwards.length / AWARDS_PER_PAGE) - 1}
-                  onClick={() => setAwardPage(p => Math.min(Math.ceil(userAwards.length / AWARDS_PER_PAGE) - 1, p + 1))}
-                >
-                  ›
-                </Button>
-              </Box>
-            )}
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={() => navigate('/quests')}
-              sx={{ mt: 2 }}
-            >
-              View Quests
-            </Button>
+            {/* Button Row (bottom aligned) */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', minHeight: 40 }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => navigate('/quests')}
+              >
+                View Quests
+              </Button>
+            </Box>
           </CardContent>
         </Card>
       </Box>
