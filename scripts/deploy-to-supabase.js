@@ -2,8 +2,21 @@ import { createClient } from '@supabase/supabase-js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import dotenv from 'dotenv'
+
+// Load environment variables from .env file
+dotenv.config()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// Debug: Log all environment variables that start with SUPABASE or VITE
+console.log('🔍 Debug: Environment variables:')
+Object.keys(process.env)
+  .filter(key => key.startsWith('SUPABASE') || key.startsWith('VITE'))
+  .forEach(key => {
+    const value = process.env[key]
+    console.log(`   ${key}: ${value ? '✓ (set)' : '❌ (not set)'}`)
+  })
 
 // Environment variables
 const supabaseUrl = process.env.VITE_SUPABASE_URL
@@ -23,10 +36,10 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 function getContentType(filePath) {
   const ext = path.extname(filePath).toLowerCase()
   const types = {
-    '.html': 'text/html; charset=utf-8',
-    '.css': 'text/css; charset=utf-8',
-    '.js': 'application/javascript; charset=utf-8',
-    '.json': 'application/json; charset=utf-8',
+    '.html': 'text/html',
+    '.css': 'text/css',
+    '.js': 'application/javascript',
+    '.json': 'application/json',
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
