@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Box, IconButton, Tooltip, Typography, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, CircularProgress, useTheme, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
 // Responsive grid columns logic (copied from PhotoGridPage)
 const useGridColumns = () => {
   const theme = useTheme();
@@ -40,6 +39,8 @@ const SpeciesPage = () => {
   const [speciesName, setSpeciesName] = useState('');
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
 
   useEffect(() => {
     if (!user || !speciesId) return;
@@ -73,6 +74,8 @@ const SpeciesPage = () => {
     await supabase.from('photos').delete().eq('id', photoId);
     setUpdating(false);
     setPhotos(photos => photos.filter(p => p.id !== photoId));
+    setDeleteDialogOpen(false);
+    setPhotoToDelete(null);
   };
 
   const setAsTopPhoto = async (photoId: string) => {
@@ -192,7 +195,11 @@ const SpeciesPage = () => {
                       <IconButton
                         size="small"
                         sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'error.main', color: 'white' }, width: 32, height: 32, color: '#616161' }}
-                        onClick={e => { e.stopPropagation(); deletePhoto(photo.id); }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          setPhotoToDelete(photo);
+                          setDeleteDialogOpen(true);
+                        }}
                         disabled={updating}
                       >
                         <DeleteIcon fontSize="small" />
@@ -208,6 +215,28 @@ const SpeciesPage = () => {
           )}
         </Box>
       )}
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => { if (!updating) { setDeleteDialogOpen(false); setPhotoToDelete(null); } }}
+        aria-labelledby="delete-photo-dialog-title"
+        aria-describedby="delete-photo-dialog-description"
+      >
+        <DialogTitle id="delete-photo-dialog-title">Delete Photo?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-photo-dialog-description">
+            Are you sure you want to delete this photo? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setDeleteDialogOpen(false); setPhotoToDelete(null); }} disabled={updating}>
+            Cancel
+          </Button>
+          <Button onClick={() => { if (photoToDelete) deletePhoto(photoToDelete.id); }} color="error" disabled={updating}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
