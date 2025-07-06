@@ -16,6 +16,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GroupIcon from '@mui/icons-material/Group';
 import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import PhotoIcon from '@mui/icons-material/Photo';
 import FlagIcon from '@mui/icons-material/Flag';
 import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, Avatar, Tooltip } from '@mui/material';
 import { useState } from 'react';
@@ -27,7 +28,7 @@ const navLinks = [
   { to: '/leaderboard', label: 'Leaderboard', icon: <EmojiEventsIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/friends', label: 'Friends', icon: <GroupIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/feed', label: 'Feed', icon: <DynamicFeedIcon sx={{ mr: 1 }} />, requiresAuth: true },
-  { to: '/photos', label: 'Photos', icon: <CloudUploadIcon sx={{ mr: 1 }} />, requiresAuth: true },
+  { to: '/photos', label: 'Photos', icon: <PhotoIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/my-uploads', label: 'My Uploads', icon: <CloudUploadIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/quests', label: 'Quests', icon: <FlagIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/quests-admin', label: 'Quests Admin', icon: <FlagIcon sx={{ mr: 1, color: 'secondary.main' }} />, requiresAuth: true },

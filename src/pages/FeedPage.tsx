@@ -422,18 +422,26 @@ const FeedPage = () => {
                   {/* Existing Comments */}
                   {photo.comments.map((comment) => (
                     <Box key={comment.id} sx={{ mb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                      {/* Row 1: Avatar and user name */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
                           {comment.user_profile.display_name.charAt(0).toUpperCase()}
                         </Avatar>
-                        <Box sx={{ flexGrow: 1 }}>
-                          <Typography variant="body2" align="left">
-                            <strong>{comment.user_profile.display_name}</strong> {comment.content}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" align="left">
-                            {formatRelativeTime(comment.created_at)}
-                          </Typography>
-                        </Box>
+                        <Typography variant="body2" align="left" sx={{ fontWeight: 600 }}>
+                          {comment.user_profile.display_name}
+                        </Typography>
+                      </Box>
+                      {/* Row 2: Comment text */}
+                      <Box sx={{ pl: 5, mt: 0.5, mb: 0.5 }}>
+                        <Typography variant="body2" align="left">
+                          {comment.content}
+                        </Typography>
+                      </Box>
+                      {/* Row 3: Time */}
+                      <Box sx={{ pl: 5, display: 'flex', justifyContent: 'flex-end' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'right' }}>
+                          {formatRelativeTime(comment.created_at)}
+                        </Typography>
                       </Box>
                     </Box>
                   ))}
