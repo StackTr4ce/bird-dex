@@ -159,7 +159,6 @@ const HomePage = () => {
         .from('photos')
         .select('id, url, thumbnail_url, species_id, user_id, created_at')
         .in('user_id', friendIds)
-        .in('privacy', ['public', 'friends'])
         .eq('hidden_from_feed', false)
         .order('created_at', { ascending: false })
         .limit(6);

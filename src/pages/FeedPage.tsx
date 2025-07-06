@@ -44,7 +44,6 @@ interface FeedPhoto {
   thumbnail_url?: string;
   species_id: string;
   user_id: string;
-  privacy: 'public' | 'friends' | 'private';
   created_at: string;
   hidden_from_species_view?: boolean;
   user_profile: {
@@ -209,9 +208,8 @@ const FeedPage = () => {
 
         const response = await supabase
           .from('photos')
-          .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at')
+          .select('id, url, thumbnail_url, species_id, user_id, created_at')
           .in('user_id', friendIds)
-          .in('privacy', ['public', 'friends']) // Respect privacy
           .eq('hidden_from_feed', false)
           .order('created_at', { ascending: false })
           .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
@@ -222,7 +220,7 @@ const FeedPage = () => {
         // Fetch user's own photos (all privacy levels since it's their own)
         const response = await supabase
           .from('photos')
-          .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at, hidden_from_species_view')
+          .select('id, url, thumbnail_url, species_id, user_id, created_at, hidden_from_species_view')
           .eq('user_id', user.id)
           .eq('hidden_from_feed', false)
           .order('created_at', { ascending: false })

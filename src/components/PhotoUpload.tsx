@@ -7,9 +7,6 @@ import {
   Paper,
   Stack,
   Button,
-  MenuItem,
-  Select,
-  InputLabel,
   FormControl,
   FormHelperText,
   CircularProgress,
@@ -34,7 +31,7 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
   // const [speciesList, setSpeciesList] = useState<string[]>([]);
   const [speciesId, setSpeciesId] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
-  const [privacy, setPrivacy] = useState<'public' | 'friends' | 'private'>('public');
+  // Privacy state removed
   // For thumbnail generation
   const [setAsTop, setSetAsTop] = useState(false);
   async function createThumbnail(blob: Blob, size = 360): Promise<Blob> {
@@ -2246,20 +2243,18 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
         });
       } else {
         // Check if user already has a photo for this species
-        const { data: existingPhotos } = await supabase
+        await supabase
           .from('photos')
           .select('id')
           .eq('user_id', user?.id)
           .eq('species_id', speciesId);
-        const isFirst = !existingPhotos || existingPhotos.length === 0;
+        // const isFirst = !existingPhotos || existingPhotos.length === 0;
         // Store photo in photos table
         const { data: inserted, error: insertError } = await supabase.from('photos').insert({
           user_id: user?.id,
           species_id: speciesId,
           url: filePath,
           thumbnail_url: thumbPath,
-          privacy,
-          is_top: isFirst,
         }).select('id').single();
         if (insertError) throw insertError;
         insertedPhotoId = inserted?.id;
@@ -2277,7 +2272,7 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
       setFile(null);
       setCroppedBlob(null);
       setShowCropper(false);
-      setPrivacy('public');
+      // setPrivacy removed
       setSpeciesId('');
       if (onUpload) onUpload();
     } catch (err: any) {
@@ -2357,19 +2352,7 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
               />
             </Box>
           )}
-          <FormControl fullWidth>
-            <InputLabel id="privacy-label">Privacy</InputLabel>
-            <Select
-              labelId="privacy-label"
-              value={privacy}
-              label="Privacy"
-              onChange={e => setPrivacy(e.target.value as any)}
-            >
-              <MenuItem value="public">Public</MenuItem>
-              <MenuItem value="friends">Friends Only</MenuItem>
-              <MenuItem value="private">Private</MenuItem>
-            </Select>
-          </FormControl>
+          {/* Privacy selection removed */}
           {/* Set as top photo checkbox (only for non-quest uploads) */}
           {!questId && (
             <FormControlLabel
