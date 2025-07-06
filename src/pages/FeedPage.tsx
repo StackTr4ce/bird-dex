@@ -23,6 +23,12 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 import SupabaseImage from '../components/SupabaseImage';
@@ -67,6 +73,8 @@ const FeedPage = () => {
   const [newComments, setNewComments] = useState<{[key: string]: string}>({});
   const [commenting, setCommenting] = useState<Set<string>>(new Set());
   const [currentTab, setCurrentTab] = useState<'friends' | 'my'>('friends');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState<FeedPhoto | null>(null);
 
   // Get user's friends
   const getUserFriends = useCallback(async () => {
@@ -116,6 +124,7 @@ const FeedPage = () => {
           .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at')
           .in('user_id', friendIds)
           .in('privacy', ['public', 'friends']) // Respect privacy
+          .eq('hidden_from_feed', false)
           .order('created_at', { ascending: false })
           .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
         
@@ -127,6 +136,7 @@ const FeedPage = () => {
           .from('photos')
           .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at')
           .eq('user_id', user.id)
+          .eq('hidden_from_feed', false)
           .order('created_at', { ascending: false })
           .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
         
@@ -304,6 +314,15 @@ const FeedPage = () => {
     }
   };
 
+  // Delete photo (hard delete, including from storage)
+  const handleDeletePhoto = async (photo: FeedPhoto) => {
+    // Remove from storage only if not referenced in quest_entries (handled in SQL)
+    await supabase.rpc('delete_or_hide_photo', { photo_id: photo.id });
+    setPhotos(photos => photos.filter(p => p.id !== photo.id));
+    setDeleteDialogOpen(false);
+    setPhotoToDelete(null);
+  };
+
   // Format relative time
   const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -426,6 +445,15 @@ const FeedPage = () => {
                 >
                   {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
                 </Button>
+                {currentTab === 'my' && photo.user_id === user?.id && (
+                  <IconButton
+                    aria-label="Delete Photo"
+                    sx={{ color: '#b0b0b0' }}
+                    onClick={() => { setPhotoToDelete(photo); setDeleteDialogOpen(true); }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
               </CardActions>
 
               {/* Comments Section */}
@@ -497,6 +525,29 @@ const FeedPage = () => {
           )}
         </Stack>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => { setDeleteDialogOpen(false); setPhotoToDelete(null); }}
+        aria-labelledby="delete-photo-dialog-title"
+        aria-describedby="delete-photo-dialog-description"
+      >
+        <DialogTitle id="delete-photo-dialog-title">Delete Photo?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-photo-dialog-description">
+            Are you sure you want to delete this photo? This will also delete all comments on this photo. This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setDeleteDialogOpen(false); setPhotoToDelete(null); }}>
+            Cancel
+          </Button>
+          <Button onClick={() => { if (photoToDelete) handleDeletePhoto(photoToDelete); }} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
