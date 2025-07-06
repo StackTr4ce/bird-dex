@@ -1,4 +1,6 @@
-import { Box, Typography, Paper, TextField, Button, Stack, IconButton, Tooltip } from '@mui/material';
+import { useAuth } from '../components/AuthProvider';
+import { Box, Typography, Paper, TextField, Button, Stack, IconButton, Tooltip, Autocomplete } from '@mui/material';
+import { SPECIES_LIST } from '../constants';
 import EditIcon from '@mui/icons-material/Edit';
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -29,6 +31,7 @@ function CenterMapOnMarker({ lat, lng }: { lat: number, lng: number }) {
 }
 
 export default function PhotoDetailPage() {
+  const { user } = useAuth();
   const { photoId } = useParams();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [speciesId, setSpeciesId] = useState<string | null>(null);
@@ -38,6 +41,7 @@ export default function PhotoDetailPage() {
   const [description, setDescription] = useState<string>('');
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [originalSpeciesId, setOriginalSpeciesId] = useState<string | null>(null);
 
   // Fetch photo info from Supabase
   useEffect(() => {
@@ -65,6 +69,7 @@ export default function PhotoDetailPage() {
         }
         setPhotoUrl(data.url || null);
         setSpeciesId(data.species_id || null);
+        setOriginalSpeciesId(data.species_id || null);
         setLat(data.lat ?? null);
         setLng(data.lng ?? null);
         setDescription(data.description || '');
@@ -212,6 +217,15 @@ export default function PhotoDetailPage() {
         <Stack spacing={2}>
           {editing ? (
             <>
+              <Autocomplete
+                options={SPECIES_LIST}
+                value={speciesId || ''}
+                onChange={(_, newValue) => setSpeciesId(newValue || '')}
+                renderInput={(params) => (
+                  <TextField {...params} label="Species" fullWidth />
+                )}
+                sx={{ mb: 2 }}
+              />
               <TextField
                 label="Details"
                 value={description}
@@ -281,10 +295,26 @@ export default function PhotoDetailPage() {
                   onClick={async () => {
                     if (!photoId) return;
                     setSaving(true);
+                    // If species changed and user has this photo as top_species, delete from top_species first
+                    if (
+                      user &&
+                      originalSpeciesId &&
+                      speciesId &&
+                      speciesId !== originalSpeciesId
+                    ) {
+                      // Remove from top_species if this photo is the top for the original species
+                      await supabase
+                        .from('top_species')
+                        .delete()
+                        .eq('user_id', user.id)
+                        .eq('species_id', originalSpeciesId)
+                        .eq('photo_id', photoId);
+                    }
                     await supabase
                       .from('photos')
-                      .update({ lat, lng, description })
+                      .update({ lat, lng, description, species_id: speciesId })
                       .eq('id', photoId);
+                    setOriginalSpeciesId(speciesId);
                     setEditing(false);
                     setSaving(false);
                   }}

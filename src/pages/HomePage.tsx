@@ -116,15 +116,21 @@ const HomePage = () => {
   // Fetch user stats
   const fetchUserStats = async () => {
     if (!user) return;
-
     try {
+      // Unique species: count from top_species table
+      const { data: topSpecies, error: topSpeciesError } = await supabase
+        .from('top_species')
+        .select('species_id')
+        .eq('user_id', user.id);
+      if (topSpeciesError) throw topSpeciesError;
+      const uniqueSpecies = new Set(topSpecies?.map((t: any) => t.species_id) || []).size;
+
+      // Total photos: still count from photos table, not hidden from feed
       const { data: photos } = await supabase
         .from('photos')
-        .select('species_id')
+        .select('id')
         .eq('user_id', user.id)
         .eq('hidden_from_feed', false);
-
-      const uniqueSpecies = new Set(photos?.map(p => p.species_id) || []).size;
       const totalPhotos = photos?.length || 0;
 
       setUserStats({ uniqueSpecies, totalPhotos });

@@ -43,7 +43,7 @@ const LeaderboardPage = () => {
   const fetchLeaderboard = async () => {
     setLoading(true);
     try {
-      // First, get all user profiles
+      // Get all user profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('user_profiles_public')
         .select('user_id, display_name');
@@ -55,18 +55,21 @@ const LeaderboardPage = () => {
         return;
       }
 
-      // Get all photos with their species and user information, but only those not hidden from the feed
+      // Get all top_species (unique species per user)
+      const { data: topSpecies, error: topSpeciesError } = await supabase
+        .from('top_species')
+        .select('user_id, species_id');
+      if (topSpeciesError) throw topSpeciesError;
+
+      // Get all photos not hidden from feed (for total photo count)
       const { data: photos, error: photosError } = await supabase
         .from('photos')
-        .select('user_id, species_id, hidden_from_feed')
+        .select('user_id')
         .eq('hidden_from_feed', false);
-
       if (photosError) throw photosError;
 
       // Calculate stats for each user
       const userStats = new Map<string, { uniqueSpecies: Set<string>, totalPhotos: number }>();
-
-      // Initialize all users
       profiles.forEach(profile => {
         userStats.set(profile.user_id, {
           uniqueSpecies: new Set<string>(),
@@ -74,11 +77,18 @@ const LeaderboardPage = () => {
         });
       });
 
-      // Count photos and unique species
+      // Count unique species from top_species
+      topSpecies?.forEach(row => {
+        const stats = userStats.get(row.user_id);
+        if (stats) {
+          stats.uniqueSpecies.add(row.species_id);
+        }
+      });
+
+      // Count total photos from photos table
       photos?.forEach(photo => {
         const stats = userStats.get(photo.user_id);
         if (stats) {
-          stats.uniqueSpecies.add(photo.species_id);
           stats.totalPhotos++;
         }
       });
