@@ -20,6 +20,7 @@ import {
   EmojiEvents as TrophyIcon,
   PhotoLibrary as PhotoIcon,
   Pets as SpeciesIcon,
+  RemoveRedEye as EyeIcon,
 } from '@mui/icons-material';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
@@ -41,7 +42,6 @@ const LeaderboardPage = () => {
 
   const fetchLeaderboard = async () => {
     setLoading(true);
-    
     try {
       // First, get all user profiles
       const { data: profiles, error: profilesError } = await supabase
@@ -55,10 +55,11 @@ const LeaderboardPage = () => {
         return;
       }
 
-      // Get all photos with their species and user information
+      // Get all photos with their species and user information, but only those not hidden from species view
       const { data: photos, error: photosError } = await supabase
         .from('photos')
-        .select('user_id, species_id');
+        .select('user_id, species_id, hidden_from_species_view')
+        .neq('hidden_from_species_view', true);
 
       if (photosError) throw photosError;
 
@@ -182,6 +183,9 @@ const LeaderboardPage = () => {
       </Typography>
       <Typography align="left" variant="subtitle1" color="text.secondary" gutterBottom sx={{ pb: 1 }}>
         Rankings based on unique bird species photographed
+        <Box component="span" sx={{ ml: 1, verticalAlign: 'middle' }}>
+          <EyeIcon fontSize="small" sx={{ color: 'action.active', verticalAlign: 'middle' }} />
+        </Box>
       </Typography>
 
       {/* User's Current Rank */}
@@ -307,8 +311,8 @@ const LeaderboardPage = () => {
       {/* Footer Info */}
       <Box sx={{ mt: 3, textAlign: 'center' }}>
         <Typography variant="body2" color="text.secondary">
-          Rankings are based on unique bird species photographed with public or friends visibility.
-          Private photos are not included in the leaderboard.
+          <EyeIcon fontSize="small" sx={{ color: 'action.active', verticalAlign: 'middle', mr: 0.5 }} />
+          Only photos visible in the "dex" (species view) are counted. Hidden photos are excluded from the leaderboard.
         </Typography>
       </Box>
     </Box>

@@ -14,7 +14,7 @@ const useGridColumns = () => {
   return 5;
 };
 import SupabaseImage from '../components/SupabaseImage';
-import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -39,8 +39,8 @@ const SpeciesPage = () => {
   const [speciesName, setSpeciesName] = useState('');
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
+  const [hideDialogOpen, setHideDialogOpen] = useState(false);
+  const [photoToHide, setPhotoToHide] = useState<Photo | null>(null);
 
   useEffect(() => {
     if (!user || !speciesId) return;
@@ -62,18 +62,18 @@ const SpeciesPage = () => {
     fetchPhotos();
   }, [user, speciesId]);
 
-  const deletePhoto = async (photoId: string) => {
+  const hidePhotoFromDex = async (photoId: string) => {
     if (!user) return;
     setUpdating(true);
-    // Soft-delete: hide from species view only
+    // Hide from species view only
     await supabase
       .from('photos')
       .update({ hidden_from_species_view: true })
       .eq('id', photoId);
     setUpdating(false);
     setPhotos(photos => photos.filter(p => p.id !== photoId));
-    setDeleteDialogOpen(false);
-    setPhotoToDelete(null);
+    setHideDialogOpen(false);
+    setPhotoToHide(null);
   };
 
   const setAsTopPhoto = async (photoId: string) => {
@@ -189,18 +189,28 @@ const SpeciesPage = () => {
                         </IconButton>
                       </span>
                     </Tooltip>
-                    <Tooltip title="Delete Photo">
+                    <Tooltip title="Hide from Dex (species view)">
                       <IconButton
                         size="small"
-                        sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'error.main', color: 'white' }, width: 32, height: 32, color: '#616161' }}
+                        sx={{
+                          bgcolor: 'rgba(255,255,255,0.9)',
+                          width: 32,
+                          height: 32,
+                          color: 'grey.400',
+                          transition: 'color 0.2s',
+                          '&:hover': {
+                            bgcolor: 'action.active',
+                            color: 'grey.700',
+                          },
+                        }}
                         onClick={e => {
                           e.stopPropagation();
-                          setPhotoToDelete(photo);
-                          setDeleteDialogOpen(true);
+                          setPhotoToHide(photo);
+                          setHideDialogOpen(true);
                         }}
                         disabled={updating}
                       >
-                        <DeleteIcon fontSize="small" />
+                        <CloseIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                   </Box>
@@ -213,25 +223,25 @@ const SpeciesPage = () => {
           )}
         </Box>
       )}
-      {/* Delete Confirmation Dialog */}
+      {/* Hide from Dex Confirmation Dialog */}
       <Dialog
-        open={deleteDialogOpen}
-        onClose={() => { if (!updating) { setDeleteDialogOpen(false); setPhotoToDelete(null); } }}
-        aria-labelledby="delete-photo-dialog-title"
-        aria-describedby="delete-photo-dialog-description"
+        open={hideDialogOpen}
+        onClose={() => { if (!updating) { setHideDialogOpen(false); setPhotoToHide(null); } }}
+        aria-labelledby="hide-photo-dialog-title"
+        aria-describedby="hide-photo-dialog-description"
       >
-        <DialogTitle id="delete-photo-dialog-title">Delete Photo?</DialogTitle>
+        <DialogTitle id="hide-photo-dialog-title">Hide Photo from Dex?</DialogTitle>
         <DialogContent>
-          <DialogContentText id="delete-photo-dialog-description">
-            Are you sure you want to delete this photo? This action cannot be undone.
+          <DialogContentText id="hide-photo-dialog-description">
+            Are you sure you want to hide this photo from the species view ("dex")? It will no longer appear in your dex, but will not be deleted. You can still see it in your uploads.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setPhotoToDelete(null); }} disabled={updating}>
+          <Button onClick={() => { setHideDialogOpen(false); setPhotoToHide(null); }} disabled={updating}>
             Cancel
           </Button>
-          <Button onClick={() => { if (photoToDelete) deletePhoto(photoToDelete.id); }} color="error" disabled={updating}>
-            Delete
+          <Button onClick={() => { if (photoToHide) hidePhotoFromDex(photoToHide.id); }} color="primary" disabled={updating}>
+            Hide from Dex
           </Button>
         </DialogActions>
       </Dialog>

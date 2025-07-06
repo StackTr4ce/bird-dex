@@ -26,6 +26,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import Tooltip from '@mui/material/Tooltip';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -210,19 +211,6 @@ const FeedPage = () => {
           comment_count: commentCountsMap[photo.id] || 0,
         };
       });
-  // Toggle hidden_from_species_view for a photo (must be at top level)
-  const handleToggleSpeciesView = async (photo: FeedPhoto) => {
-    const newValue = !photo.hidden_from_species_view;
-    const { error } = await supabase
-      .from('photos')
-      .update({ hidden_from_species_view: newValue })
-      .eq('id', photo.id);
-    if (!error) {
-      setPhotos(prev => prev.map(p =>
-        p.id === photo.id ? { ...p, hidden_from_species_view: newValue } : p
-      ));
-    }
-  };
 
       if (reset || pageNum === 0) {
         setPhotos(transformedPhotos);
@@ -479,13 +467,16 @@ const FeedPage = () => {
                 </Button>
                 {currentTab === 'my' && photo.user_id === user?.id && (
                   <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
-                    <IconButton
-                      aria-label={photo.hidden_from_species_view ? "Show in Species Grid" : "Hide from Species Grid"}
-                      sx={{ color: photo.hidden_from_species_view ? '#b0b0b0' : 'primary.main', mr: 0.5 }}
-                      onClick={() => handleToggleSpeciesView(photo)}
-                    >
-                      {photo.hidden_from_species_view ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
+                    <Tooltip title="Toggle Dex visibility" arrow>
+                      <IconButton
+                        aria-label={photo.hidden_from_species_view ? "Show in Species Grid" : "Hide from Species Grid"}
+                        sx={{ color: photo.hidden_from_species_view ? '#b0b0b0' : 'primary.main', mr: 0.5 }}
+                        onClick={() => handleToggleSpeciesView(photo)}
+                      >
+                        {photo.hidden_from_species_view ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </Tooltip>
+
                     <IconButton
                       aria-label="Delete Photo"
                       sx={{ color: '#b0b0b0' }}
