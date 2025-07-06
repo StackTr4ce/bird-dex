@@ -16,6 +16,8 @@ import {
   Divider,
   Tabs,
   Tab,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   Comment as CommentIcon,
@@ -79,6 +81,7 @@ const FeedPage = () => {
   const [currentTab, setCurrentTab] = useState<'friends' | 'my'>('friends');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [photoToDelete, setPhotoToDelete] = useState<FeedPhoto | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Get user's friends
   const getUserFriends = useCallback(async () => {
@@ -103,14 +106,40 @@ const FeedPage = () => {
   // Toggle hidden_from_species_view for a photo (must be at top level)
   const handleToggleSpeciesView = async (photo: FeedPhoto) => {
     const newValue = !photo.hidden_from_species_view;
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('photos')
       .update({ hidden_from_species_view: newValue })
       .eq('id', photo.id);
+    console.log('handleToggleSpeciesView:', { error, data });
     if (!error) {
+      // Check for Postgres error in data (for some drivers, error is in data.message or data[0].message)
+      if (data && typeof data === 'object') {
+        const arr = data as any[];
+        if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'object' && 'message' in arr[0]) {
+          let msg = arr[0].message;
+
+          console.log('Postgres error in data[0].message:', msg);
+          setErrorMessage(msg);
+          return;
+        }
+        if (!Array.isArray(data) && 'message' in data) {
+          let msg = (data as any).message;
+          if (msg === 'A hidden photo cannot be the top photo for a species') {
+            msg = 'Set a different top photo before removing the photo';
+          }
+          console.log('Postgres error in data.message:', msg);
+          setErrorMessage(msg);
+          return;
+        }
+      }
       setPhotos(prev => prev.map(p =>
         p.id === photo.id ? { ...p, hidden_from_species_view: newValue } : p
       ));
+    } else {
+      let msg = error.message;
+
+      console.log('Supabase error:', error);
+      setErrorMessage(msg);
     }
   };
 
@@ -337,10 +366,23 @@ const FeedPage = () => {
   // Delete photo (hard delete, including from storage)
   const handleDeletePhoto = async (photo: FeedPhoto) => {
     // Remove from storage only if not referenced in quest_entries (handled in SQL)
-    await supabase.rpc('delete_or_hide_photo', { photo_id: photo.id });
-    setPhotos(photos => photos.filter(p => p.id !== photo.id));
-    setDeleteDialogOpen(false);
-    setPhotoToDelete(null);
+    const { error, data } = await supabase.rpc('delete_or_hide_photo', { photo_id: photo.id });
+    if (!error) {
+      // Check for Postgres error in data (for some drivers, error is in data.message)
+      if (data && data.message) {
+        setErrorMessage(data.message);
+        setDeleteDialogOpen(false);
+        setPhotoToDelete(null);
+      } else {
+        setPhotos(photos => photos.filter(p => p.id !== photo.id));
+        setDeleteDialogOpen(false);
+        setPhotoToDelete(null);
+      }
+    } else {
+      setErrorMessage(error.message);
+      setDeleteDialogOpen(false);
+      setPhotoToDelete(null);
+    }
   };
 
   // Format relative time
@@ -580,7 +622,18 @@ const FeedPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    {/* Error Snackbar */}
+    <Snackbar
+      open={!!errorMessage}
+      autoHideDuration={6000}
+      onClose={() => setErrorMessage(null)}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+    >
+      <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+        {errorMessage}
+      </Alert>
+    </Snackbar>
+  </Box>
   );
 };
 

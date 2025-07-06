@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, IconButton, Tooltip, Typography, CircularProgress, useTheme, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, CircularProgress, useTheme, useMediaQuery, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Snackbar, Alert } from '@mui/material';
 // Responsive grid columns logic (copied from PhotoGridPage)
 const useGridColumns = () => {
   const theme = useTheme();
@@ -41,6 +41,7 @@ const SpeciesPage = () => {
   const [updating, setUpdating] = useState(false);
   const [hideDialogOpen, setHideDialogOpen] = useState(false);
   const [photoToHide, setPhotoToHide] = useState<Photo | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !speciesId) return;
@@ -65,15 +66,43 @@ const SpeciesPage = () => {
   const hidePhotoFromDex = async (photoId: string) => {
     if (!user) return;
     setUpdating(true);
-    // Hide from species view only
-    await supabase
+    const { error, data } = await supabase
       .from('photos')
       .update({ hidden_from_species_view: true })
       .eq('id', photoId);
-    setUpdating(false);
-    setPhotos(photos => photos.filter(p => p.id !== photoId));
-    setHideDialogOpen(false);
-    setPhotoToHide(null);
+    console.log('hidePhotoFromDex:', { error, data });
+    if (!error) {
+      // Check for Postgres error in data (for some drivers, error is in data.message or data[0].message)
+      if (data && typeof data === 'object') {
+        const arr = data as any[];
+        if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'object' && 'message' in arr[0]) {
+          console.log('Postgres error in data[0].message:', arr[0].message);
+          setErrorMessage(arr[0].message);
+          setUpdating(false);
+          setHideDialogOpen(false);
+          setPhotoToHide(null);
+          return;
+        }
+        if (!Array.isArray(data) && 'message' in data) {
+          console.log('Postgres error in data.message:', (data as any).message);
+          setErrorMessage((data as any).message);
+          setUpdating(false);
+          setHideDialogOpen(false);
+          setPhotoToHide(null);
+          return;
+        }
+      }
+      setPhotos(photos => photos.filter(p => p.id !== photoId));
+      setUpdating(false);
+      setHideDialogOpen(false);
+      setPhotoToHide(null);
+    } else {
+      console.log('Supabase error:', error);
+      setErrorMessage(error.message);
+      setUpdating(false);
+      setHideDialogOpen(false);
+      setPhotoToHide(null);
+    }
   };
 
   const setAsTopPhoto = async (photoId: string) => {
@@ -245,7 +274,18 @@ const SpeciesPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    {/* Error Snackbar */}
+    <Snackbar
+      open={!!errorMessage}
+      autoHideDuration={6000}
+      onClose={() => setErrorMessage(null)}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+    >
+      <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+        {errorMessage}
+      </Alert>
+    </Snackbar>
+  </Box>
   );
 };
 
