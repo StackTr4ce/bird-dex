@@ -24,6 +24,7 @@ import {
   Send as SendIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  InfoOutlined as InfoOutlinedIcon,
 } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -564,6 +565,16 @@ const FeedPage = () => {
                           )}
                         </IconButton>
                       </span>
+                    </Tooltip>
+                    {/* Photo Detail Icon */}
+                    <Tooltip title="View Photo Details" arrow>
+                      <IconButton
+                        aria-label="View Photo Details"
+                        sx={{ color: 'primary.main', mr: 0.5 }}
+                        onClick={() => window.location.assign(`/photo/${photo.id}`)}
+                      >
+                        <InfoOutlinedIcon />
+                      </IconButton>
                     </Tooltip>
                     <Tooltip title="Toggle Dex visibility" arrow>
                       <IconButton
