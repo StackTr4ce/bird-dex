@@ -24,6 +24,8 @@ import {
   ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -41,6 +43,7 @@ interface FeedPhoto {
   user_id: string;
   privacy: 'public' | 'friends' | 'private';
   created_at: string;
+  hidden_from_species_view?: boolean;
   user_profile: {
     display_name: string;
     email?: string;
@@ -96,6 +99,20 @@ const FeedPage = () => {
     return friendIds;
   }, [user]);
 
+  // Toggle hidden_from_species_view for a photo (must be at top level)
+  const handleToggleSpeciesView = async (photo: FeedPhoto) => {
+    const newValue = !photo.hidden_from_species_view;
+    const { error } = await supabase
+      .from('photos')
+      .update({ hidden_from_species_view: newValue })
+      .eq('id', photo.id);
+    if (!error) {
+      setPhotos(prev => prev.map(p =>
+        p.id === photo.id ? { ...p, hidden_from_species_view: newValue } : p
+      ));
+    }
+  };
+
   // Fetch photos from friends
   const fetchPhotos = useCallback(async (pageNum: number = 0, reset: boolean = false) => {
     if (!user) return;
@@ -134,7 +151,7 @@ const FeedPage = () => {
         // Fetch user's own photos (all privacy levels since it's their own)
         const response = await supabase
           .from('photos')
-          .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at')
+          .select('id, url, thumbnail_url, species_id, user_id, privacy, created_at, hidden_from_species_view')
           .eq('user_id', user.id)
           .eq('hidden_from_feed', false)
           .order('created_at', { ascending: false })
@@ -175,8 +192,9 @@ const FeedPage = () => {
         });
       }
 
+
       // Transform data to match our interface
-      const transformedPhotos: FeedPhoto[] = (feedPhotos || []).map(photo => {
+      const transformedPhotos: FeedPhoto[] = (feedPhotos || []).map((photo: any) => {
         const userProfile = userProfilesMap[photo.user_id];
         let displayName = 'Unknown User';
         if (userProfile) {
@@ -184,6 +202,7 @@ const FeedPage = () => {
         }
         return {
           ...photo,
+          hidden_from_species_view: photo.hidden_from_species_view ?? false,
           user_profile: {
             display_name: displayName,
           },
@@ -191,6 +210,19 @@ const FeedPage = () => {
           comment_count: commentCountsMap[photo.id] || 0,
         };
       });
+  // Toggle hidden_from_species_view for a photo (must be at top level)
+  const handleToggleSpeciesView = async (photo: FeedPhoto) => {
+    const newValue = !photo.hidden_from_species_view;
+    const { error } = await supabase
+      .from('photos')
+      .update({ hidden_from_species_view: newValue })
+      .eq('id', photo.id);
+    if (!error) {
+      setPhotos(prev => prev.map(p =>
+        p.id === photo.id ? { ...p, hidden_from_species_view: newValue } : p
+      ));
+    }
+  };
 
       if (reset || pageNum === 0) {
         setPhotos(transformedPhotos);
@@ -446,13 +478,22 @@ const FeedPage = () => {
                   {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
                 </Button>
                 {currentTab === 'my' && photo.user_id === user?.id && (
-                  <IconButton
-                    aria-label="Delete Photo"
-                    sx={{ color: '#b0b0b0' }}
-                    onClick={() => { setPhotoToDelete(photo); setDeleteDialogOpen(true); }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
+                    <IconButton
+                      aria-label={photo.hidden_from_species_view ? "Show in Species Grid" : "Hide from Species Grid"}
+                      sx={{ color: photo.hidden_from_species_view ? '#b0b0b0' : 'primary.main', mr: 0.5 }}
+                      onClick={() => handleToggleSpeciesView(photo)}
+                    >
+                      {photo.hidden_from_species_view ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                    <IconButton
+                      aria-label="Delete Photo"
+                      sx={{ color: '#b0b0b0' }}
+                      onClick={() => { setPhotoToDelete(photo); setDeleteDialogOpen(true); }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 )}
               </CardActions>
 
