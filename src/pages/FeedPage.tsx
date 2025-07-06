@@ -82,6 +82,47 @@ const FeedPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [photoToDelete, setPhotoToDelete] = useState<FeedPhoto | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Map of species_id to top photo_id for this user
+  const [topSpeciesMap, setTopSpeciesMap] = useState<{ [speciesId: string]: string }>({});
+  // Fetch top_species for "My Photos" tab
+  useEffect(() => {
+    const fetchTopSpecies = async () => {
+      if (currentTab !== 'my' || !user) {
+        setTopSpeciesMap({});
+        return;
+      }
+      const { data, error } = await supabase
+        .from('top_species')
+        .select('species_id,photo_id')
+        .eq('user_id', user.id);
+      if (error || !data) {
+        setTopSpeciesMap({});
+      } else {
+        const map: { [speciesId: string]: string } = {};
+        data.forEach((row: any) => {
+          map[row.species_id] = row.photo_id;
+        });
+        setTopSpeciesMap(map);
+      }
+    };
+    fetchTopSpecies();
+  }, [currentTab, user, photos]);
+  // Set as top photo for a species
+  const handleSetAsTopPhoto = async (photo: FeedPhoto) => {
+    if (!user) return;
+    try {
+      await supabase.from('top_species').upsert([
+        {
+          user_id: user.id,
+          species_id: photo.species_id,
+          photo_id: photo.id
+        }
+      ], { onConflict: 'user_id,species_id' });
+      setTopSpeciesMap(prev => ({ ...prev, [photo.species_id]: photo.id }));
+    } catch (err) {
+      setErrorMessage('Failed to set as top photo.');
+    }
+  };
 
   // Get user's friends
   const getUserFriends = useCallback(async () => {
@@ -509,6 +550,23 @@ const FeedPage = () => {
                 </Button>
                 {currentTab === 'my' && photo.user_id === user?.id && (
                   <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
+                    {/* Set as Top Photo Star Icon */}
+                    <Tooltip title={topSpeciesMap[photo.species_id] === photo.id ? 'This is your top photo for this species' : 'Set as Top Photo for this species'}>
+                      <span>
+                        <IconButton
+                          aria-label="Set as Top Photo"
+                          sx={{ color: topSpeciesMap[photo.species_id] === photo.id ? '#FFD700' : '#b0b0b0', mr: 0.5 }}
+                          disabled={topSpeciesMap[photo.species_id] === photo.id}
+                          onClick={() => handleSetAsTopPhoto(photo)}
+                        >
+                          {topSpeciesMap[photo.species_id] === photo.id ? (
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                          ) : (
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                          )}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                     <Tooltip title="Toggle Dex visibility" arrow>
                       <IconButton
                         aria-label={photo.hidden_from_species_view ? "Show in Species Grid" : "Hide from Species Grid"}
@@ -518,7 +576,6 @@ const FeedPage = () => {
                         {photo.hidden_from_species_view ? <VisibilityOffIcon /> : <VisibilityIcon />}
                       </IconButton>
                     </Tooltip>
-
                     <IconButton
                       aria-label="Delete Photo"
                       sx={{ color: '#b0b0b0' }}

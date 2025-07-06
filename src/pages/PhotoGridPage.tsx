@@ -55,23 +55,29 @@ const PhotoGridPage = () => {
     if (!user) return;
     const fetchTopPhotos = async () => {
       setLoading(true);
-      // Fetch the user's top photo for each species
+      // Fetch the user's top photos from the top_species table, joining to photos
       const { data, error } = await supabase
-        .from('photos')
-        .select('id,url,thumbnail_url,species_id,user_id,created_at')
+        .from('top_species')
+        .select('photo_id,species_id,photos(id,url,thumbnail_url,user_id,created_at)')
         .eq('user_id', user.id)
-        .eq('is_top', true)
-        .eq('hidden_from_species_view', false)
         .order('species_id', { ascending: true });
-      
+
       if (error) {
         setTopPhotos([]);
       } else {
-        // Use species_id as the name if species_name is not present
-        setTopPhotos((data || []).map((p: any) => ({
-          ...p,
-          species_name: p.species_id || '',
-        })));
+        // Flatten and map to TopPhoto interface
+        setTopPhotos((data || []).map((row: any) => {
+          const photo = row.photos || {};
+          return {
+            id: photo.id,
+            url: photo.url,
+            thumbnail_url: photo.thumbnail_url,
+            species_id: row.species_id,
+            user_id: photo.user_id,
+            created_at: photo.created_at,
+            species_name: row.species_id || '',
+          };
+        }));
       }
       setLoading(false);
     };

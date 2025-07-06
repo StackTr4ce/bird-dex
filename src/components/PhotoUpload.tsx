@@ -27,6 +27,8 @@ interface PhotoUploadProps {
   onCancel?: () => void;
 }
 
+import { Checkbox, FormControlLabel } from '@mui/material';
+
 const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
   const { user } = useAuth();
   // const [speciesList, setSpeciesList] = useState<string[]>([]);
@@ -34,6 +36,7 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [privacy, setPrivacy] = useState<'public' | 'friends' | 'private'>('public');
   // For thumbnail generation
+  const [setAsTop, setSetAsTop] = useState(false);
   async function createThumbnail(blob: Blob, size = 360): Promise<Blob> {
     // Create an offscreen image and canvas
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -2232,6 +2235,7 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
       const thumbPath = `${user?.id}/${questId ? `quest_${questId}` : `species_${speciesId}`}/${Date.now()}_thumb.jpg`;
       const { error: thumbError } = await supabase.storage.from('photos').upload(thumbPath, thumbBlob);
       if (thumbError) throw thumbError;
+      let insertedPhotoId: string | null = null;
       if (questId) {
         // Store entry in quest_entries table
         await supabase.from('quest_entries').insert({
@@ -2249,14 +2253,26 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
           .eq('species_id', speciesId);
         const isFirst = !existingPhotos || existingPhotos.length === 0;
         // Store photo in photos table
-        await supabase.from('photos').insert({
+        const { data: inserted, error: insertError } = await supabase.from('photos').insert({
           user_id: user?.id,
           species_id: speciesId,
           url: filePath,
           thumbnail_url: thumbPath,
           privacy,
           is_top: isFirst,
-        });
+        }).select('id').single();
+        if (insertError) throw insertError;
+        insertedPhotoId = inserted?.id;
+        // If set as top, upsert into top_species
+        if (setAsTop && insertedPhotoId) {
+          await supabase.from('top_species').upsert([
+            {
+              user_id: user?.id,
+              species_id: speciesId,
+              photo_id: insertedPhotoId
+            }
+          ], { onConflict: 'user_id,species_id' });
+        }
       }
       setFile(null);
       setCroppedBlob(null);
@@ -2354,6 +2370,21 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
               <MenuItem value="private">Private</MenuItem>
             </Select>
           </FormControl>
+          {/* Set as top photo checkbox (only for non-quest uploads) */}
+          {!questId && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={setAsTop}
+                  onChange={e => setSetAsTop(e.target.checked)}
+                  color="primary"
+                  disabled={uploading}
+                />
+              }
+              label="Set as top photo for this species"
+              sx={{ mb: 1 }}
+            />
+          )}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Button type="submit" variant="contained" color="primary" disabled={uploading} sx={{ minWidth: 120 }}>
               {uploading ? <CircularProgress size={20} /> : 'Upload'}
