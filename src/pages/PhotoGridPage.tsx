@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
@@ -62,6 +61,7 @@ const PhotoGridPage = () => {
         .select('id,url,thumbnail_url,species_id,user_id,created_at')
         .eq('user_id', user.id)
         .eq('is_top', true)
+        .eq('hidden_from_species_view', false)
         .order('species_id', { ascending: true });
       
       if (error) {

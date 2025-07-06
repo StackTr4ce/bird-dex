@@ -54,6 +54,7 @@ const SpeciesPage = () => {
         .select('id,url,thumbnail_url,is_top,created_at')
         .eq('user_id', user.id)
         .eq('species_id', speciesId)
+        .eq('hidden_from_species_view', false)
         .order('created_at', { ascending: false });
       setPhotos(photoData || []);
       setLoading(false);
@@ -64,14 +65,11 @@ const SpeciesPage = () => {
   const deletePhoto = async (photoId: string) => {
     if (!user) return;
     setUpdating(true);
-    // Delete from Supabase Storage (optional: if you want to remove the file itself)
-    // Now, url is just the storage path
-    const photo = photos.find(p => p.id === photoId);
-    if (photo) {
-      await supabase.storage.from('photos').remove([photo.url]);
-    }
-    // Delete from DB
-    await supabase.from('photos').delete().eq('id', photoId);
+    // Soft-delete: hide from species view only
+    await supabase
+      .from('photos')
+      .update({ hidden_from_species_view: true })
+      .eq('id', photoId);
     setUpdating(false);
     setPhotos(photos => photos.filter(p => p.id !== photoId));
     setDeleteDialogOpen(false);
