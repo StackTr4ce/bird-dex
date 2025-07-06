@@ -37,7 +37,7 @@ interface FeedPhoto {
   created_at: string;
   user_profile: {
     display_name: string;
-    email: string;
+    email?: string;
   };
   comments: FeedComment[];
   comment_count: number;
@@ -50,7 +50,7 @@ interface FeedComment {
   user_id: string;
   user_profile: {
     display_name: string;
-    email: string;
+    email?: string;
   };
 }
 
@@ -139,8 +139,8 @@ const FeedPage = () => {
       // Get user profiles for the photo owners
       const userIds = [...new Set(feedPhotos?.map(p => p.user_id) || [])];
       const { data: userProfiles } = await supabase
-        .from('user_profiles')
-        .select('user_id, display_name, email')
+        .from('user_profiles_public')
+        .select('user_id, display_name')
         .in('user_id', userIds);
 
       // Create a map for quick user profile lookup
@@ -168,11 +168,14 @@ const FeedPage = () => {
       // Transform data to match our interface
       const transformedPhotos: FeedPhoto[] = (feedPhotos || []).map(photo => {
         const userProfile = userProfilesMap[photo.user_id];
+        let displayName = 'Unknown User';
+        if (userProfile) {
+          displayName = userProfile.display_name?.trim() ? userProfile.display_name : 'Unknown User';
+        }
         return {
           ...photo,
           user_profile: {
-            display_name: userProfile?.display_name || 'Unknown User',
-            email: userProfile?.email || '',
+            display_name: displayName,
           },
           comments: [],
           comment_count: commentCountsMap[photo.id] || 0,
@@ -214,8 +217,8 @@ const FeedPage = () => {
       // Get user profiles for comment authors
       const userIds = [...new Set(comments.map(c => c.user_id))];
       const { data: userProfiles } = await supabase
-        .from('user_profiles')
-        .select('user_id, display_name, email')
+        .from('user_profiles_public')
+        .select('user_id, display_name')
         .in('user_id', userIds);
 
       // Create a map for quick user profile lookup
@@ -229,8 +232,7 @@ const FeedPage = () => {
         return {
           ...comment,
           user_profile: {
-            display_name: userProfile?.display_name || 'Unknown User',
-            email: userProfile?.email || '',
+            display_name: userProfile?.display_name || comment.user_id || 'Unknown User',
           },
         };
       });

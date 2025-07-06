@@ -166,7 +166,7 @@ const HomePage = () => {
         // Get user profiles for the photo owners
         const userIds = [...new Set(feedPhotos.map(p => p.user_id))];
         const { data: userProfiles } = await supabase
-          .from('user_profiles')
+          .from('user_profiles_public')
           .select('user_id, display_name')
           .in('user_id', userIds);
 
@@ -178,10 +178,14 @@ const HomePage = () => {
 
         const transformedPhotos: FeedPhoto[] = feedPhotos.map(photo => {
           const userProfile = userProfilesMap[photo.user_id];
+          let displayName = 'Unknown User';
+          if (userProfile) {
+            displayName = userProfile.display_name?.trim() ? userProfile.display_name : 'Unknown User';
+          }
           return {
             ...photo,
             user_profile: {
-              display_name: userProfile?.display_name || 'Unknown User',
+              display_name: displayName,
             },
           };
         });

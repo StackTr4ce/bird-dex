@@ -81,11 +81,13 @@ const QuestDetailPage = () => {
       const userIds = Array.from(new Set((entriesData || []).map((e: Entry) => e.user_id)));
       if (userIds.length > 0) {
         const { data: profilesData } = await supabase
-          .from('user_profiles')
+          .from('user_profiles_public')
           .select('user_id,display_name')
           .in('user_id', userIds);
         const profileMap: Record<string, string> = {};
-        (profilesData || []).forEach((p: UserProfile) => { profileMap[p.user_id] = p.display_name; });
+        (profilesData || []).forEach((p: UserProfile) => {
+          profileMap[p.user_id] = p.display_name && p.display_name.trim() ? p.display_name : 'Unknown User';
+        });
         setUserProfileMap(profileMap);
       } else {
         setUserProfileMap({});

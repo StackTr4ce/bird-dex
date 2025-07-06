@@ -27,7 +27,7 @@ import { useAuth } from '../components/AuthProvider';
 interface LeaderboardEntry {
   user_id: string;
   display_name: string;
-  email: string;
+  // email: string; // removed, not available in public view
   unique_species: number;
   total_photos: number;
   rank: number;
@@ -45,8 +45,8 @@ const LeaderboardPage = () => {
     try {
       // First, get all user profiles
       const { data: profiles, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('user_id, display_name, email');
+        .from('user_profiles_public')
+        .select('user_id, display_name');
 
       if (profilesError) throw profilesError;
       if (!profiles || profiles.length === 0) {
@@ -58,8 +58,7 @@ const LeaderboardPage = () => {
       // Get all photos with their species and user information
       const { data: photos, error: photosError } = await supabase
         .from('photos')
-        .select('user_id, species_id')
-        .in('privacy', ['public', 'friends']); // Only count public and friends photos
+        .select('user_id, species_id');
 
       if (photosError) throw photosError;
 
@@ -89,7 +88,6 @@ const LeaderboardPage = () => {
         return {
           user_id: profile.user_id,
           display_name: profile.display_name,
-          email: profile.email,
           unique_species: stats?.uniqueSpecies.size || 0,
           total_photos: stats?.totalPhotos || 0,
           rank: 0, // Will be set after sorting
@@ -282,9 +280,7 @@ const LeaderboardPage = () => {
                               />
                             )}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {entry.email}
-                          </Typography>
+                          {/* Email removed: not available in public view */}
                         </Box>
                       </Stack>
                     </TableCell>
