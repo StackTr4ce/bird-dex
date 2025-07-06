@@ -121,7 +121,8 @@ const HomePage = () => {
       const { data: photos } = await supabase
         .from('photos')
         .select('species_id')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('hidden_from_feed', false);
 
       const uniqueSpecies = new Set(photos?.map(p => p.species_id) || []).size;
       const totalPhotos = photos?.length || 0;
@@ -153,12 +154,13 @@ const HomePage = () => {
         friendship.requester === user.id ? friendship.addressee : friendship.requester
       );
 
-      // Fetch recent photos from friends
+      // Fetch recent photos from friends, only those not hidden from feed
       const { data: feedPhotos } = await supabase
         .from('photos')
         .select('id, url, thumbnail_url, species_id, user_id, created_at')
         .in('user_id', friendIds)
         .in('privacy', ['public', 'friends'])
+        .eq('hidden_from_feed', false)
         .order('created_at', { ascending: false })
         .limit(6);
 
@@ -345,12 +347,9 @@ const HomePage = () => {
                     <Typography variant="body2" color="text.secondary">Loading awards…</Typography>
                   </Box>
                 ) : userAwards.length === 0 ? (
-                  <Box sx={{ textAlign: 'center', width: 50, height: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <Box sx={{ textAlign: 'center', width: 100, height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     <Typography variant="body2" color="text.secondary">
                       No awards yet
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Participate in quests to earn awards!
                     </Typography>
                   </Box>
                 ) : (

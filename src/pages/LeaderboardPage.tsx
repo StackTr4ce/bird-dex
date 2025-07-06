@@ -55,11 +55,11 @@ const LeaderboardPage = () => {
         return;
       }
 
-      // Get all photos with their species and user information, but only those not hidden from species view
+      // Get all photos with their species and user information, but only those not hidden from the feed
       const { data: photos, error: photosError } = await supabase
         .from('photos')
-        .select('user_id, species_id, hidden_from_species_view')
-        .neq('hidden_from_species_view', true);
+        .select('user_id, species_id, hidden_from_feed')
+        .eq('hidden_from_feed', false);
 
       if (photosError) throw photosError;
 
