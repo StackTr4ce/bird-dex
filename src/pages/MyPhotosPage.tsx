@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -15,22 +16,21 @@ import {
   Divider,
   Snackbar,
   Alert,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
-import { useState, useEffect, useCallback } from 'react';
-import {
-  Comment as CommentIcon,
-  Send as SendIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-} from '@mui/icons-material';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogActions from '@mui/material/DialogActions';
+import { Send as SendIcon, InfoOutlined as InfoOutlinedIcon, Comment as CommentIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 import SupabaseImage from '../components/SupabaseImage';
+
 
 interface FeedPhoto {
   id: string;
@@ -59,9 +59,16 @@ interface FeedComment {
   };
 }
 
+// Copy the FeedPage component, but only show the user's own photos (currentTab = 'my')
+// Remove the Tabs UI and all logic for 'friends' tab.
+// The rest of the logic (actions, comments, etc.) remains the same.
+
+// For brevity, you can copy the FeedPage code and set currentTab = 'my' everywhere, and remove the tab switcher.
+
+// This is a placeholder. You should copy the FeedPage code and adapt as described above.
 const ITEMS_PER_PAGE = 10;
 
-const FeedPage = () => {
+export default function MyPhotosPage() {
   const { user } = useAuth();
   const [photos, setPhotos] = useState<FeedPhoto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,31 +81,84 @@ const FeedPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [photoToDelete, setPhotoToDelete] = useState<FeedPhoto | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Map of species_id to top photo_id for this user
+  const [topSpeciesMap, setTopSpeciesMap] = useState<{ [speciesId: string]: string }>({});
 
-  // Get user's friends
-  const getUserFriends = useCallback(async () => {
-    if (!user) return [];
-    
-    const { data: friendships } = await supabase
-      .from('friendships')
-      .select('requester, addressee')
-      .or(`requester.eq.${user.id},addressee.eq.${user.id}`)
-      .eq('status', 'accepted');
+  // Fetch top_species for "My Photos" page
+  useEffect(() => {
+    const fetchTopSpecies = async () => {
+      if (!user) {
+        setTopSpeciesMap({});
+        return;
+      }
+      const { data, error } = await supabase
+        .from('top_species')
+        .select('species_id,photo_id')
+        .eq('user_id', user.id);
+      if (error || !data) {
+        setTopSpeciesMap({});
+      } else {
+        const map: { [speciesId: string]: string } = {};
+        data.forEach((row: any) => {
+          map[row.species_id] = row.photo_id;
+        });
+        setTopSpeciesMap(map);
+      }
+    };
+    fetchTopSpecies();
+  }, [user, photos]);
 
-    if (!friendships) return [];
+  // Set as top photo for a species
+  const handleSetAsTopPhoto = async (photo: FeedPhoto) => {
+    if (!user) return;
+    try {
+      await supabase.from('top_species').upsert([
+        {
+          user_id: user.id,
+          species_id: photo.species_id,
+          photo_id: photo.id
+        }
+      ], { onConflict: 'user_id,species_id' });
+      setTopSpeciesMap(prev => ({ ...prev, [photo.species_id]: photo.id }));
+    } catch (err) {
+      setErrorMessage('Failed to set as top photo.');
+    }
+  };
 
-    // Extract friend IDs (exclude current user)
-    const friendIds = friendships.map(friendship => 
-      friendship.requester === user.id ? friendship.addressee : friendship.requester
-    );
+  // Toggle hidden_from_species_view for a photo
+  const handleToggleSpeciesView = async (photo: FeedPhoto) => {
+    const newValue = !photo.hidden_from_species_view;
+    const { error, data } = await supabase
+      .from('photos')
+      .update({ hidden_from_species_view: newValue })
+      .eq('id', photo.id);
+    if (!error) {
+      if (data && typeof data === 'object') {
+        const arr = data as any[];
+        if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'object' && 'message' in arr[0]) {
+          let msg = arr[0].message;
+          setErrorMessage(msg);
+          return;
+        }
+        if (!Array.isArray(data) && 'message' in data) {
+          let msg = (data as any).message;
+          if (msg === 'A hidden photo cannot be the top photo for a species') {
+            msg = 'Set a different top photo before removing the photo';
+          }
+          setErrorMessage(msg);
+          return;
+        }
+      }
+      setPhotos(prev => prev.map(p =>
+        p.id === photo.id ? { ...p, hidden_from_species_view: newValue } : p
+      ));
+    } else {
+      let msg = error.message;
+      setErrorMessage(msg);
+    }
+  };
 
-    return friendIds;
-  }, [user]);
-
-
-
-
-  // Fetch only friends' photos for Feed page
+  // Fetch only user's own photos
   const fetchPhotos = useCallback(async (pageNum: number = 0, reset: boolean = false) => {
     if (!user) return;
 
@@ -106,75 +166,44 @@ const FeedPage = () => {
     else setLoadingMore(true);
 
     try {
-      // Fetch friends' photos
-      const friendIds = await getUserFriends();
-      if (friendIds.length === 0) {
-        setPhotos([]);
-        setHasMore(false);
-        setLoading(false);
-        setLoadingMore(false);
-        return;
-      }
-
       const response = await supabase
         .from('photos')
-        .select('id, url, thumbnail_url, species_id, user_id, created_at')
-        .in('user_id', friendIds.length > 0 ? friendIds : ['00000000-0000-0000-0000-000000000000'])
-        .eq('hidden_from_feed', false)
+        .select('id, url, thumbnail_url, species_id, user_id, created_at, hidden_from_species_view')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
 
-      const feedPhotos = response.data;
+      const myPhotos = response.data;
       const error = response.error;
       if (error) throw error;
 
-      // Get user profiles for the photo owners
-      const userIds = [...new Set(feedPhotos?.map(p => p.user_id) || [])];
-      const { data: userProfiles } = await supabase
-        .from('user_profiles_public')
-        .select('user_id, display_name')
-        .in('user_id', userIds);
-
-      // Create a map for quick user profile lookup
-      const userProfilesMap = userProfiles?.reduce((acc, profile) => {
-        acc[profile.user_id] = profile;
-        return acc;
-      }, {} as {[key: string]: any}) || {};
+      // Get user profile for the photo owner (current user)
+      const userProfile = {
+        display_name: (user as any).user_metadata?.display_name || (user.email ? user.email.split('@')[0] : 'Me'),
+        email: user.email,
+      };
 
       // Get comment counts for each photo
-      const photoIds = feedPhotos?.map(p => p.id) || [];
+      const photoIds = myPhotos?.map(p => p.id) || [];
       let commentCountsMap: {[key: string]: number} = {};
-      
       if (photoIds.length > 0) {
         const { data: commentCounts } = await supabase
           .from('comments')
           .select('photo_id')
           .in('photo_id', photoIds);
-        
-        // Count comments for each photo
         commentCounts?.forEach(comment => {
           commentCountsMap[comment.photo_id] = (commentCountsMap[comment.photo_id] || 0) + 1;
         });
       }
 
-
       // Transform data to match our interface
-      const transformedPhotos: FeedPhoto[] = (feedPhotos || []).map((photo: any) => {
-        const userProfile = userProfilesMap[photo.user_id];
-        let displayName = 'Unknown User';
-        if (userProfile) {
-          displayName = userProfile.display_name?.trim() ? userProfile.display_name : 'Unknown User';
-        }
-        return {
-          ...photo,
-          hidden_from_species_view: photo.hidden_from_species_view ?? false,
-          user_profile: {
-            display_name: displayName,
-          },
-          comments: [],
-          comment_count: commentCountsMap[photo.id] || 0,
-        };
-      });
+      const transformedPhotos: FeedPhoto[] = (myPhotos || []).map((photo: any) => ({
+        ...photo,
+        hidden_from_species_view: photo.hidden_from_species_view ?? false,
+        user_profile: userProfile,
+        comments: [],
+        comment_count: commentCountsMap[photo.id] || 0,
+      }));
 
       if (reset || pageNum === 0) {
         setPhotos(transformedPhotos);
@@ -185,12 +214,12 @@ const FeedPage = () => {
       setHasMore(transformedPhotos.length === ITEMS_PER_PAGE);
       setPage(pageNum);
     } catch (error) {
-      console.error('Error fetching feed:', error);
+      console.error('Error fetching my photos:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [user, getUserFriends]);
+  }, [user]);
 
   // Load more photos
   const loadMore = () => {
@@ -230,8 +259,7 @@ const FeedPage = () => {
           },
         };
       });
-
-      setPhotos(prev => prev.map(photo => 
+      setPhotos(prev => prev.map(photo =>
         photo.id === photoId 
           ? { ...photo, comments: transformedComments }
           : photo
@@ -240,9 +268,8 @@ const FeedPage = () => {
   };
 
   // Toggle comments visibility
-  const toggleComments = async (photoId: string) => {
+  const toggleComments = (photoId: string) => {
     const newExpanded = new Set(expandedComments);
-    
     if (expandedComments.has(photoId)) {
       newExpanded.delete(photoId);
     } else {
@@ -250,10 +277,9 @@ const FeedPage = () => {
       // Fetch comments if not already loaded
       const photo = photos.find(p => p.id === photoId);
       if (photo && photo.comments.length === 0 && photo.comment_count > 0) {
-        await fetchComments(photoId);
+        fetchComments(photoId);
       }
     }
-    
     setExpandedComments(newExpanded);
   };
 
@@ -261,9 +287,7 @@ const FeedPage = () => {
   const addComment = async (photoId: string) => {
     const content = newComments[photoId]?.trim();
     if (!content || !user) return;
-
     setCommenting(prev => new Set([...prev, photoId]));
-
     try {
       const { error } = await supabase
         .from('comments')
@@ -272,17 +296,10 @@ const FeedPage = () => {
           user_id: user.id,
           content: content,
         });
-
       if (error) throw error;
-
-      // Clear the comment input
       setNewComments(prev => ({ ...prev, [photoId]: '' }));
-      
-      // Refresh comments for this photo
       await fetchComments(photoId);
-      
-      // Update comment count
-      setPhotos(prev => prev.map(photo => 
+      setPhotos(prev => prev.map(photo =>
         photo.id === photoId 
           ? { ...photo, comment_count: photo.comment_count + 1 }
           : photo
@@ -300,10 +317,8 @@ const FeedPage = () => {
 
   // Delete photo (hard delete, including from storage)
   const handleDeletePhoto = async (photo: FeedPhoto) => {
-    // Remove from storage only if not referenced in quest_entries (handled in SQL)
     const { error, data } = await supabase.rpc('delete_or_hide_photo', { photo_id: photo.id });
     if (!error) {
-      // Check for Postgres error in data (for some drivers, error is in data.message)
       if (data && data.message) {
         setErrorMessage(data.message);
         setDeleteDialogOpen(false);
@@ -325,15 +340,11 @@ const FeedPage = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInHours < 48) return 'Yesterday';
     return date.toLocaleDateString();
   };
-
-
-  // Remove tab change logic
 
   useEffect(() => {
     fetchPhotos(0, true);
@@ -348,22 +359,21 @@ const FeedPage = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-      <Typography align="center" variant="h4" fontWeight={700} gutterBottom sx={{ width: '100%' }}>
-        Photo Feed
+    <Box>
+      <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
+        My Photos
       </Typography>
-
       {photos.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4, width: '100%' }}>
-          <Typography variant="h6" color="text.secondary" align="center">
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6" color="text.secondary">
             No photos to show
           </Typography>
-          <Typography variant="body2" color="text.secondary" align="center">
-            Add some friends to see their photos here!
+          <Typography variant="body2" color="text.secondary">
+            Upload some bird photos to see them here!
           </Typography>
         </Box>
       ) : (
-        <Stack spacing={3} sx={{ width: '100%' }}>
+        <Stack spacing={3}>
           {photos.map((photo) => (
             <Card key={photo.id} elevation={2}>
               {/* Header */}
@@ -386,7 +396,6 @@ const FeedPage = () => {
                     variant="outlined"
                   />
                 </Box>
-                
                 {/* Photo */}
                 <Box sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden' }}>
                   <SupabaseImage
@@ -401,7 +410,6 @@ const FeedPage = () => {
                   />
                 </Box>
               </CardContent>
-
               {/* Actions */}
               <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
                 <Button
@@ -412,9 +420,52 @@ const FeedPage = () => {
                 >
                   {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
                 </Button>
-                {/* No photo actions for Feed page (friends' photos only) */}
+                <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                  {/* Set as Top Photo Star Icon */}
+                  <Tooltip title={topSpeciesMap[photo.species_id] === photo.id ? 'This is your top photo for this species' : 'Set as Top Photo for this species'}>
+                    <span>
+                      <IconButton
+                        aria-label="Set as Top Photo"
+                        sx={{ color: topSpeciesMap[photo.species_id] === photo.id ? '#FFD700' : '#b0b0b0', mr: 0.5 }}
+                        disabled={topSpeciesMap[photo.species_id] === photo.id}
+                        onClick={() => handleSetAsTopPhoto(photo)}
+                      >
+                        {topSpeciesMap[photo.species_id] === photo.id ? (
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        ) : (
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        )}
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  {/* Photo Detail Icon */}
+                  <Tooltip title="View Photo Details" arrow>
+                    <IconButton
+                      aria-label="View Photo Details"
+                      sx={{ color: 'primary.main', mr: 0.5 }}
+                      onClick={() => window.location.assign(`/photo/${photo.id}`)}
+                    >
+                      <InfoOutlinedIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Toggle Dex visibility" arrow>
+                    <IconButton
+                      aria-label={photo.hidden_from_species_view ? "Show in Species Grid" : "Hide from Species Grid"}
+                      sx={{ color: photo.hidden_from_species_view ? '#b0b0b0' : 'primary.main', mr: 0.5 }}
+                      onClick={() => handleToggleSpeciesView(photo)}
+                    >
+                      {photo.hidden_from_species_view ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  </Tooltip>
+                  <IconButton
+                    aria-label="Delete Photo"
+                    sx={{ color: '#b0b0b0' }}
+                    onClick={() => { setPhotoToDelete(photo); setDeleteDialogOpen(true); }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
               </CardActions>
-
               {/* Comments Section */}
               <Collapse in={expandedComments.has(photo.id)}>
                 <Divider />
@@ -437,7 +488,6 @@ const FeedPage = () => {
                       </Box>
                     </Box>
                   ))}
-
                   {/* Add Comment */}
                   <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
                     <TextField
@@ -469,7 +519,6 @@ const FeedPage = () => {
               </Collapse>
             </Card>
           ))}
-
           {/* Load More */}
           {hasMore && (
             <Box sx={{ textAlign: 'center', py: 2 }}>
@@ -484,7 +533,6 @@ const FeedPage = () => {
           )}
         </Stack>
       )}
-
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
@@ -507,19 +555,17 @@ const FeedPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    {/* Error Snackbar */}
-    <Snackbar
-      open={!!errorMessage}
-      autoHideDuration={6000}
-      onClose={() => setErrorMessage(null)}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-    >
-      <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
-        {errorMessage}
-      </Alert>
-    </Snackbar>
-  </Box>
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
-};
-
-export default FeedPage;
+}

@@ -5,6 +5,7 @@ import SpeciesPage from './pages/SpeciesPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import FriendsPage from './pages/FriendsPage';
 import FeedPage from './pages/FeedPage';
+import MyPhotosPage from './pages/MyPhotosPage';
 import MyUploadsPage from './pages/MyUploadsPage';
 import QuestsPage from './pages/QuestsPage';
 
@@ -117,6 +118,13 @@ function App() {
               <ProtectedRoute>
                 <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>
                   <FeedPage />
+                </Container>
+              </ProtectedRoute>
+            } />
+            <Route path="/photos" element={
+              <ProtectedRoute>
+                <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>
+                  <MyPhotosPage />
                 </Container>
               </ProtectedRoute>
             } />

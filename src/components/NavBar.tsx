@@ -27,6 +27,7 @@ const navLinks = [
   { to: '/leaderboard', label: 'Leaderboard', icon: <EmojiEventsIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/friends', label: 'Friends', icon: <GroupIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/feed', label: 'Feed', icon: <DynamicFeedIcon sx={{ mr: 1 }} />, requiresAuth: true },
+  { to: '/photos', label: 'Photos', icon: <CloudUploadIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/my-uploads', label: 'My Uploads', icon: <CloudUploadIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/quests', label: 'Quests', icon: <FlagIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/quests-admin', label: 'Quests Admin', icon: <FlagIcon sx={{ mr: 1, color: 'secondary.main' }} />, requiresAuth: true },

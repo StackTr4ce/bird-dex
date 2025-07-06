@@ -28,7 +28,6 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
   // const [speciesList, setSpeciesList] = useState<string[]>([]);
   const [speciesId, setSpeciesId] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
-  // Privacy state removed
   // For thumbnail generation
   const [setAsTop, setSetAsTop] = useState(false);
   async function createThumbnail(blob: Blob, size = 360): Promise<Blob> {
@@ -200,7 +199,6 @@ const PhotoUpload = ({ onUpload, questId, onCancel }: PhotoUploadProps) => {
               />
             </Box>
           )}
-          {/* Privacy selection removed */}
           {/* Set as top photo checkbox (only for non-quest uploads) */}
           {!questId && (
             <FormControlLabel
