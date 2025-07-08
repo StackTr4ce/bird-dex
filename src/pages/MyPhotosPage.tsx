@@ -359,221 +359,233 @@ export default function MyPhotosPage() {
   }
 
   return (
-    <Box>
-      <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
-        My Photos
-      </Typography>
-      {photos.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            No photos to show
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Upload some bird photos to see them here!
-          </Typography>
-        </Box>
-      ) : (
-        <Stack spacing={3}>
-          {photos.map((photo) => (
-            <Card key={photo.id} elevation={2}>
-              {/* Header */}
-              <CardContent sx={{ pb: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                    {photo.user_profile.display_name.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {photo.user_profile.display_name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {formatRelativeTime(photo.created_at)}
-                    </Typography>
-                  </Box>
-                  <Chip 
-                    label={photo.species_id} 
-                    size="small" 
-                    variant="outlined"
-                  />
-                </Box>
-                {/* Photo */}
-                <Box sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden' }}>
-                  <SupabaseImage
-                    path={photo.thumbnail_url || photo.url}
-                    alt={`${photo.species_id} by ${photo.user_profile.display_name}`}
-                    style={{ 
-                      width: '100%', 
-                      maxHeight: 400, 
-                      objectFit: 'cover',
-                      display: 'block'
-                    }}
-                  />
-                </Box>
-              </CardContent>
-              {/* Actions */}
-              <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
-                <Button
-                  startIcon={<CommentIcon />}
-                  endIcon={expandedComments.has(photo.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  onClick={() => toggleComments(photo.id)}
-                  size="small"
-                >
-                  {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
-                </Button>
-                <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
-                  {/* Set as Top Photo Star Icon */}
-                  <Tooltip title={topSpeciesMap[photo.species_id] === photo.id ? 'This is your top photo for this species' : 'Set as Top Photo for this species'}>
-                    <span>
-                      <IconButton
-                        aria-label="Set as Top Photo"
-                        sx={{ color: topSpeciesMap[photo.species_id] === photo.id ? '#FFD700' : '#b0b0b0', mr: 0.5 }}
-                        disabled={topSpeciesMap[photo.species_id] === photo.id}
-                        onClick={() => handleSetAsTopPhoto(photo)}
-                      >
-                        {topSpeciesMap[photo.species_id] === photo.id ? (
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                        ) : (
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                        )}
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                  {/* Photo Detail Icon */}
-                  <Tooltip title="View Photo Details" arrow>
-                    <IconButton
-                      aria-label="View Photo Details"
-                      sx={{ color: 'primary.main', mr: 0.5 }}
-                      onClick={() => window.location.assign(`/photo/${photo.id}`)}
-                    >
-                      <InfoOutlinedIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Toggle Dex visibility" arrow>
-                    <IconButton
-                      aria-label={photo.hidden_from_species_view ? "Show in Species Grid" : "Hide from Species Grid"}
-                      sx={{ color: photo.hidden_from_species_view ? '#b0b0b0' : 'primary.main', mr: 0.5 }}
-                      onClick={() => handleToggleSpeciesView(photo)}
-                    >
-                      {photo.hidden_from_species_view ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
-                  </Tooltip>
-                  <IconButton
-                    aria-label="Delete Photo"
-                    sx={{ color: '#b0b0b0' }}
-                    onClick={() => { setPhotoToDelete(photo); setDeleteDialogOpen(true); }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              </CardActions>
-              {/* Comments Section */}
-              <Collapse in={expandedComments.has(photo.id)}>
-                <Divider />
-                <CardContent sx={{ pt: 2 }}>
-                  {/* Existing Comments */}
-                  {photo.comments.map((comment) => (
-                    <Box key={comment.id} sx={{ mb: 2 }}>
-                      {/* Row 1: Avatar and user name */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                          {comment.user_profile.display_name.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Typography variant="body2" align="left" sx={{ fontWeight: 600 }}>
-                          {comment.user_profile.display_name}
-                        </Typography>
-                      </Box>
-                      {/* Row 2: Comment text */}
-                      <Box sx={{ pl: 5, mt: 0.5, mb: 0.5 }}>
-                        <Typography variant="body2" align="left">
-                          {comment.content}
-                        </Typography>
-                      </Box>
-                      {/* Row 3: Time */}
-                      <Box sx={{ pl: 5, display: 'flex', justifyContent: 'flex-end' }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'right' }}>
-                          {formatRelativeTime(comment.created_at)}
-                        </Typography>
-                      </Box>
+    <Box
+      sx={{
+        width: '100%',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        bgcolor: 'background.default',
+      }}
+    >
+      <Box sx={{ width: '100%', maxWidth: 600, px: { xs: 0.5, sm: 2 }, mx: 'auto' }}>
+        <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
+          My Photos
+        </Typography>
+        {photos.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="h6" color="text.secondary">
+              No photos to show
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Upload some bird photos to see them here!
+            </Typography>
+          </Box>
+        ) : (
+          <Stack spacing={3}>
+            {photos.map((photo) => (
+              <Card key={photo.id} elevation={2} sx={{ width: '100%' }}>
+                {/* Header */}
+                <CardContent sx={{ pb: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                      {photo.user_profile.display_name.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {photo.user_profile.display_name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatRelativeTime(photo.created_at)}
+                      </Typography>
                     </Box>
-                  ))}
-                  {/* Add Comment */}
-                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Add a comment..."
-                      value={newComments[photo.id] || ''}
-                      onChange={(e) => setNewComments(prev => ({ ...prev, [photo.id]: e.target.value }))}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          addComment(photo.id);
-                        }
+                    <Chip 
+                      label={photo.species_id} 
+                      size="small" 
+                      variant="outlined"
+                    />
+                  </Box>
+                  {/* Photo */}
+                  <Box sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
+                    <SupabaseImage
+                      path={photo.thumbnail_url || photo.url}
+                      alt={`${photo.species_id} by ${photo.user_profile.display_name}`}
+                      style={{
+                        width: '100%',
+                        maxWidth: '100%',
+                        maxHeight: 400,
+                        objectFit: 'cover',
+                        display: 'block',
                       }}
                     />
-                    <IconButton
-                      onClick={() => addComment(photo.id)}
-                      disabled={!newComments[photo.id]?.trim() || commenting.has(photo.id)}
-                      color="primary"
-                    >
-                      {commenting.has(photo.id) ? (
-                        <CircularProgress size={20} />
-                      ) : (
-                        <SendIcon />
-                      )}
-                    </IconButton>
                   </Box>
                 </CardContent>
-              </Collapse>
-            </Card>
-          ))}
-          {/* Load More */}
-          {hasMore && (
-            <Box sx={{ textAlign: 'center', py: 2 }}>
-              <Button
-                onClick={loadMore}
-                disabled={loadingMore}
-                variant="outlined"
-              >
-                {loadingMore ? <CircularProgress size={20} /> : 'Load More'}
-              </Button>
-            </Box>
-          )}
-        </Stack>
-      )}
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => { setDeleteDialogOpen(false); setPhotoToDelete(null); }}
-        aria-labelledby="delete-photo-dialog-title"
-        aria-describedby="delete-photo-dialog-description"
-      >
-        <DialogTitle id="delete-photo-dialog-title">Delete Photo?</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-photo-dialog-description">
-            Are you sure you want to delete this photo? This will also delete all comments on this photo. This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setPhotoToDelete(null); }}>
-            Cancel
-          </Button>
-          <Button onClick={() => { if (photoToDelete) handleDeletePhoto(photoToDelete); }} color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* Error Snackbar */}
-      <Snackbar
-        open={!!errorMessage}
-        autoHideDuration={6000}
-        onClose={() => setErrorMessage(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
-          {errorMessage}
-        </Alert>
-      </Snackbar>
+                {/* Actions */}
+                <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
+                  <Button
+                    startIcon={<CommentIcon />}
+                    endIcon={expandedComments.has(photo.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    onClick={() => toggleComments(photo.id)}
+                    size="small"
+                  >
+                    {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
+                  </Button>
+                  <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                    {/* Set as Top Photo Star Icon */}
+                    <Tooltip title={topSpeciesMap[photo.species_id] === photo.id ? 'This is your top photo for this species' : 'Set as Top Photo for this species'}>
+                      <span>
+                        <IconButton
+                          aria-label="Set as Top Photo"
+                          sx={{ color: topSpeciesMap[photo.species_id] === photo.id ? '#FFD700' : '#b0b0b0', mr: 0.5 }}
+                          disabled={topSpeciesMap[photo.species_id] === photo.id}
+                          onClick={() => handleSetAsTopPhoto(photo)}
+                        >
+                          {topSpeciesMap[photo.species_id] === photo.id ? (
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                          ) : (
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                          )}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    {/* Photo Detail Icon */}
+                    <Tooltip title="View Photo Details" arrow>
+                      <IconButton
+                        aria-label="View Photo Details"
+                        sx={{ color: 'primary.main', mr: 0.5 }}
+                        onClick={() => window.location.assign(`/photo/${photo.id}`)}
+                      >
+                        <InfoOutlinedIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Toggle Dex visibility" arrow>
+                      <IconButton
+                        aria-label={photo.hidden_from_species_view ? "Show in Species Grid" : "Hide from Species Grid"}
+                        sx={{ color: photo.hidden_from_species_view ? '#b0b0b0' : 'primary.main', mr: 0.5 }}
+                        onClick={() => handleToggleSpeciesView(photo)}
+                      >
+                        {photo.hidden_from_species_view ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </Tooltip>
+                    <IconButton
+                      aria-label="Delete Photo"
+                      sx={{ color: '#b0b0b0' }}
+                      onClick={() => { setPhotoToDelete(photo); setDeleteDialogOpen(true); }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </CardActions>
+                {/* Comments Section */}
+                <Collapse in={expandedComments.has(photo.id)}>
+                  <Divider />
+                  <CardContent sx={{ pt: 2 }}>
+                    {/* Existing Comments */}
+                    {photo.comments.map((comment) => (
+                      <Box key={comment.id} sx={{ mb: 2 }}>
+                        {/* Row 1: Avatar and user name */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                            {comment.user_profile.display_name.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Typography variant="body2" align="left" sx={{ fontWeight: 600 }}>
+                            {comment.user_profile.display_name}
+                          </Typography>
+                        </Box>
+                        {/* Row 2: Comment text */}
+                        <Box sx={{ pl: 5, mt: 0.5, mb: 0.5 }}>
+                          <Typography variant="body2" align="left">
+                            {comment.content}
+                          </Typography>
+                        </Box>
+                        {/* Row 3: Time */}
+                        <Box sx={{ pl: 5, display: 'flex', justifyContent: 'flex-end' }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'right' }}>
+                            {formatRelativeTime(comment.created_at)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ))}
+                    {/* Add Comment */}
+                    <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Add a comment..."
+                        value={newComments[photo.id] || ''}
+                        onChange={(e) => setNewComments(prev => ({ ...prev, [photo.id]: e.target.value }))}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            addComment(photo.id);
+                          }
+                        }}
+                      />
+                      <IconButton
+                        onClick={() => addComment(photo.id)}
+                        disabled={!newComments[photo.id]?.trim() || commenting.has(photo.id)}
+                        color="primary"
+                      >
+                        {commenting.has(photo.id) ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          <SendIcon />
+                        )}
+                      </IconButton>
+                    </Box>
+                  </CardContent>
+                </Collapse>
+              </Card>
+            ))}
+            {/* Load More */}
+            {hasMore && (
+              <Box sx={{ textAlign: 'center', py: 2 }}>
+                <Button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  variant="outlined"
+                >
+                  {loadingMore ? <CircularProgress size={20} /> : 'Load More'}
+                </Button>
+              </Box>
+            )}
+          </Stack>
+        )}
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => { setDeleteDialogOpen(false); setPhotoToDelete(null); }}
+          aria-labelledby="delete-photo-dialog-title"
+          aria-describedby="delete-photo-dialog-description"
+        >
+          <DialogTitle id="delete-photo-dialog-title">Delete Photo?</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="delete-photo-dialog-description">
+              Are you sure you want to delete this photo? This will also delete all comments on this photo. This action cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setDeleteDialogOpen(false); setPhotoToDelete(null); }}>
+              Cancel
+            </Button>
+            <Button onClick={() => { if (photoToDelete) handleDeletePhoto(photoToDelete); }} color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+        {/* Error Snackbar */}
+        <Snackbar
+          open={!!errorMessage}
+          autoHideDuration={6000}
+          onClose={() => setErrorMessage(null)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+            {errorMessage}
+          </Alert>
+        </Snackbar>
+      </Box>
     </Box>
   );
 }

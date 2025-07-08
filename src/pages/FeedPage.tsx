@@ -348,151 +348,157 @@ const FeedPage = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-      <Typography align="center" variant="h4" fontWeight={700} gutterBottom sx={{ width: '100%' }}>
-        Photo Feed
-      </Typography>
+    <Box
+      sx={{
+        width: '100%',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        bgcolor: 'background.default',
+      }}
+    >
+      <Box sx={{ width: '100%', maxWidth: 600, px: { xs: 0.5, sm: 2 }, mx: 'auto' }}>
+        <Typography align="center" variant="h4" fontWeight={700} gutterBottom sx={{ width: '100%' }}>
+          Photo Feed
+        </Typography>
 
-      {photos.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4, width: '100%' }}>
-          <Typography variant="h6" color="text.secondary" align="center">
-            No photos to show
-          </Typography>
-          <Typography variant="body2" color="text.secondary" align="center">
-            Add some friends to see their photos here!
-          </Typography>
-        </Box>
-      ) : (
-        <Stack spacing={3} sx={{ width: '100%' }}>
-          {photos.map((photo) => (
-            <Card key={photo.id} elevation={2}>
-              {/* Header */}
-              <CardContent sx={{ pb: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                    {photo.user_profile.display_name.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {photo.user_profile.display_name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {formatRelativeTime(photo.created_at)}
-                    </Typography>
-                  </Box>
-                  <Chip 
-                    label={photo.species_id} 
-                    size="small" 
-                    variant="outlined"
-                  />
-                </Box>
-                
-                {/* Photo */}
-                <Box sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden' }}>
-                  <SupabaseImage
-                    path={photo.thumbnail_url || photo.url}
-                    alt={`${photo.species_id} by ${photo.user_profile.display_name}`}
-                    style={{ 
-                      width: '100%', 
-                      maxHeight: 400, 
-                      objectFit: 'cover',
-                      display: 'block'
-                    }}
-                  />
-                </Box>
-              </CardContent>
-
-              {/* Actions */}
-              <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
-                <Button
-                  startIcon={<CommentIcon />}
-                  endIcon={expandedComments.has(photo.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  onClick={() => toggleComments(photo.id)}
-                  size="small"
-                >
-                  {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
-                </Button>
-                {/* No photo actions for Feed page (friends' photos only) */}
-              </CardActions>
-
-              {/* Comments Section */}
-              <Collapse in={expandedComments.has(photo.id)}>
-                <Divider />
-                <CardContent sx={{ pt: 2 }}>
-                  {/* Existing Comments */}
-                  {photo.comments.map((comment) => (
-                    <Box key={comment.id} sx={{ mb: 2 }}>
-                      {/* Row 1: Avatar and user name */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                          {comment.user_profile.display_name.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Typography variant="body2" align="left" sx={{ fontWeight: 600 }}>
-                          {comment.user_profile.display_name}
-                        </Typography>
-                      </Box>
-                      {/* Row 2: Comment text */}
-                      <Box sx={{ pl: 5, mt: 0.5, mb: 0.5 }}>
-                        <Typography variant="body2" align="left">
-                          {comment.content}
-                        </Typography>
-                      </Box>
-                      {/* Row 3: Time */}
-                      <Box sx={{ pl: 5, display: 'flex', justifyContent: 'flex-end' }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'right' }}>
-                          {formatRelativeTime(comment.created_at)}
-                        </Typography>
-                      </Box>
+        {photos.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 4, width: '100%' }}>
+            <Typography variant="h6" color="text.secondary" align="center">
+              No photos to show
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align="center">
+              Add some friends to see their photos here!
+            </Typography>
+          </Box>
+        ) : (
+          <Stack spacing={3} sx={{ width: '100%' }}>
+            {photos.map((photo) => (
+              <Card key={photo.id} elevation={2} sx={{ width: '100%' }}>
+                {/* Header */}
+                <CardContent sx={{ pb: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                      {photo.user_profile.display_name.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {photo.user_profile.display_name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatRelativeTime(photo.created_at)}
+                      </Typography>
                     </Box>
-                  ))}
-
-                  {/* Add Comment */}
-                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      placeholder="Add a comment..."
-                      value={newComments[photo.id] || ''}
-                      onChange={(e) => setNewComments(prev => ({ ...prev, [photo.id]: e.target.value }))}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          addComment(photo.id);
-                        }
+                    <Chip 
+                      label={photo.species_id} 
+                      size="small" 
+                      variant="outlined"
+                    />
+                  </Box>
+                  {/* Photo */}
+                  <Box sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
+                    <SupabaseImage
+                      path={photo.thumbnail_url || photo.url}
+                      alt={`${photo.species_id} by ${photo.user_profile.display_name}`}
+                      style={{
+                        width: '100%',
+                        maxWidth: '100%',
+                        maxHeight: 400,
+                        objectFit: 'cover',
+                        display: 'block',
                       }}
                     />
-                    <IconButton
-                      onClick={() => addComment(photo.id)}
-                      disabled={!newComments[photo.id]?.trim() || commenting.has(photo.id)}
-                      color="primary"
-                    >
-                      {commenting.has(photo.id) ? (
-                        <CircularProgress size={20} />
-                      ) : (
-                        <SendIcon />
-                      )}
-                    </IconButton>
                   </Box>
                 </CardContent>
-              </Collapse>
-            </Card>
-          ))}
-
-          {/* Load More */}
-          {hasMore && (
-            <Box sx={{ textAlign: 'center', py: 2 }}>
-              <Button
-                onClick={loadMore}
-                disabled={loadingMore}
-                variant="outlined"
-              >
-                {loadingMore ? <CircularProgress size={20} /> : 'Load More'}
-              </Button>
-            </Box>
-          )}
-        </Stack>
-      )}
-
+                {/* Actions */}
+                <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
+                  <Button
+                    startIcon={<CommentIcon />}
+                    endIcon={expandedComments.has(photo.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    onClick={() => toggleComments(photo.id)}
+                    size="small"
+                  >
+                    {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
+                  </Button>
+                  {/* No photo actions for Feed page (friends' photos only) */}
+                </CardActions>
+                {/* Comments Section */}
+                <Collapse in={expandedComments.has(photo.id)}>
+                  <Divider />
+                  <CardContent sx={{ pt: 2 }}>
+                    {/* Existing Comments */}
+                    {photo.comments.map((comment) => (
+                      <Box key={comment.id} sx={{ mb: 2 }}>
+                        {/* Row 1: Avatar and user name */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                            {comment.user_profile.display_name.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Typography variant="body2" align="left" sx={{ fontWeight: 600 }}>
+                            {comment.user_profile.display_name}
+                          </Typography>
+                        </Box>
+                        {/* Row 2: Comment text */}
+                        <Box sx={{ pl: 5, mt: 0.5, mb: 0.5 }}>
+                          <Typography variant="body2" align="left">
+                            {comment.content}
+                          </Typography>
+                        </Box>
+                        {/* Row 3: Time */}
+                        <Box sx={{ pl: 5, display: 'flex', justifyContent: 'flex-end' }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'right' }}>
+                            {formatRelativeTime(comment.created_at)}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ))}
+                    {/* Add Comment */}
+                    <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Add a comment..."
+                        value={newComments[photo.id] || ''}
+                        onChange={(e) => setNewComments(prev => ({ ...prev, [photo.id]: e.target.value }))}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            addComment(photo.id);
+                          }
+                        }}
+                      />
+                      <IconButton
+                        onClick={() => addComment(photo.id)}
+                        disabled={!newComments[photo.id]?.trim() || commenting.has(photo.id)}
+                        color="primary"
+                      >
+                        {commenting.has(photo.id) ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          <SendIcon />
+                        )}
+                      </IconButton>
+                    </Box>
+                  </CardContent>
+                </Collapse>
+              </Card>
+            ))}
+            {/* Load More */}
+            {hasMore && (
+              <Box sx={{ textAlign: 'center', py: 2 }}>
+                <Button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  variant="outlined"
+                >
+                  {loadingMore ? <CircularProgress size={20} /> : 'Load More'}
+                </Button>
+              </Box>
+            )}
+          </Stack>
+        )}
+      </Box>
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
@@ -515,18 +521,18 @@ const FeedPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    {/* Error Snackbar */}
-    <Snackbar
-      open={!!errorMessage}
-      autoHideDuration={6000}
-      onClose={() => setErrorMessage(null)}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-    >
-      <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
-        {errorMessage}
-      </Alert>
-    </Snackbar>
-  </Box>
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 };
 
