@@ -50,7 +50,7 @@ const QuestsPage = () => {
   return (
     <Box>
       <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
-        Quests
+        Contests
       </Typography>
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
@@ -58,11 +58,11 @@ const QuestsPage = () => {
         </Box>
       ) : (
         <>
-          <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>Active Quests</Typography>
+          <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>Active Contests</Typography>
           <Paper variant="outlined">
             <List>
               {activeQuests.length === 0 && (
-                <ListItemText primary="No active quests." sx={{ p: 2 }} />
+                <ListItemText primary="No active contests." sx={{ p: 2 }} />
               )}
               {activeQuests.map(q => (
                 <ListItemButton key={q.id} onClick={() => handleQuestClick(q.id)}>
@@ -80,11 +80,11 @@ const QuestsPage = () => {
             </List>
           </Paper>
 
-          <Typography variant="h6" sx={{ mt: 4, mb: 1 }}>Past Quests</Typography>
+          <Typography variant="h6" sx={{ mt: 4, mb: 1 }}>Past Contests</Typography>
           <Paper variant="outlined">
             <List>
               {pastQuests.length === 0 && (
-                <ListItemText primary="No past quests." sx={{ p: 2 }} />
+                <ListItemText primary="No past contests." sx={{ p: 2 }} />
               )}
               {pastQuests.map(q => (
                 <ListItemButton key={q.id} onClick={() => handleQuestClick(q.id)}>

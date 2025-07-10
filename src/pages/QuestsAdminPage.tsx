@@ -141,10 +141,10 @@ const uploadAwardImage = async (file: File, questName: string, type: 'top10' | '
   return (
     <Box>
       <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
-        Quests Admin
+        Contests Admin
       </Typography>
       <Button variant="contained" color="primary" sx={{ mb: 2 }} onClick={() => handleOpenDialog()}>
-        Create New Quest
+        Create New Contest
       </Button>
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
@@ -188,10 +188,10 @@ const uploadAwardImage = async (file: File, questName: string, type: 'top10' | '
         </TableContainer>
       )}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingQuest ? 'Edit Quest' : 'Create Quest'}</DialogTitle>
+        <DialogTitle>{editingQuest ? 'Edit Contest' : 'Create Contest'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="Quest Name" value={form.name || ''} onChange={e => handleFormChange('name', e.target.value)} required fullWidth autoFocus />
+            <TextField label="Contest Name" value={form.name || ''} onChange={e => handleFormChange('name', e.target.value)} required fullWidth autoFocus />
             <TextField label="Description" value={form.description || ''} onChange={e => handleFormChange('description', e.target.value)} fullWidth multiline minRows={2} />
             <TextField
               label="Start Time"

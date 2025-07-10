@@ -264,10 +264,10 @@ const HomePage = () => {
           </Box>
           <Box sx={{ p: 3, bgcolor: 'grey.900', borderRadius: 2 }}>
             <Typography variant="h6" fontWeight={600} gutterBottom>
-              🔥 Photo Quests
+              🏁 Photo Contests
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Participate in community photo challenges and win awards
+              Participate in community photo contests and win awards
             </Typography>
           </Box>
         </Box>
@@ -377,7 +377,7 @@ const HomePage = () => {
                             src={imgSrc}
                             alt={award.type === 'top10' ? 'Winner Award' : 'Participation Award'}
                             sx={{ width: 50, height: 50, cursor: 'pointer', border: award.type === 'top10' ? '2px solid #FFD700' : '2px solid #B0BEC5', boxShadow: 2, background: 'transparent' }}
-                            onClick={() => navigate(`/quests/${award.quest_id}`)}
+                            onClick={() => navigate(`/contests/${award.quest_id}`)}
                           />
                         </Tooltip>
                       );
@@ -416,9 +416,9 @@ const HomePage = () => {
               <Button
                 variant="outlined"
                 fullWidth
-                onClick={() => navigate('/quests')}
+                onClick={() => navigate('/contests')}
               >
-                View Quests
+                View Contests
               </Button>
             </Box>
           </CardContent>

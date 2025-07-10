@@ -7,10 +7,9 @@ import FriendsPage from './pages/FriendsPage';
 import FeedPage from './pages/FeedPage';
 import MyPhotosPage from './pages/MyPhotosPage';
 import MyUploadsPage from './pages/MyUploadsPage';
-import QuestsPage from './pages/QuestsPage';
-
-import QuestsAdminPage from './pages/QuestsAdminPage';
-import QuestDetailPage from './pages/QuestDetailPage';
+import QuestsPage from './pages/QuestsPage'; // For contest page, will rename below
+import QuestsAdminPage from './pages/QuestsAdminPage'; // For contest admin page, will rename below
+import QuestDetailPage from './pages/QuestDetailPage'; // For contest detail page, will rename below
 import LoginPage from './pages/LoginPage';
 import UserProfilePage from './pages/UserProfilePage';
 import NavBar from './components/NavBar';
@@ -135,21 +134,21 @@ function App() {
                 </Container>
               </ProtectedRoute>
             } />
-            <Route path="/quests" element={
+            <Route path="/contests" element={
               <ProtectedRoute>
                 <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>
                   <QuestsPage />
                 </Container>
               </ProtectedRoute>
             } />
-            <Route path="/quests/:questId" element={
+            <Route path="/contests/:questId" element={
               <ProtectedRoute>
                 <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>
                   <QuestDetailPage />
                 </Container>
               </ProtectedRoute>
             } />
-            <Route path="/quests-admin" element={
+            <Route path="/contests-admin" element={
               <ProtectedRoute>
                 <AdminOnly>
                   <Container maxWidth="md" sx={{ mt: 6, mb: 4 }}>

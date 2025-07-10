@@ -30,8 +30,8 @@ const navLinks = [
   { to: '/feed', label: 'Feed', icon: <DynamicFeedIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/photos', label: 'Photos', icon: <PhotoIcon sx={{ mr: 1 }} />, requiresAuth: true },
   { to: '/my-uploads', label: 'My Uploads', icon: <CloudUploadIcon sx={{ mr: 1 }} />, requiresAuth: true },
-  { to: '/quests', label: 'Quests', icon: <FlagIcon sx={{ mr: 1 }} />, requiresAuth: true },
-  { to: '/quests-admin', label: 'Quests Admin', icon: <FlagIcon sx={{ mr: 1, color: 'secondary.main' }} />, requiresAuth: true },
+  { to: '/contests', label: 'Contests', icon: <FlagIcon sx={{ mr: 1 }} />, requiresAuth: true },
+  { to: '/contests-admin', label: 'Contests Admin', icon: <FlagIcon sx={{ mr: 1, color: 'secondary.main' }} />, requiresAuth: true },
 ];
 
 const NavBar = () => {
@@ -40,9 +40,9 @@ const NavBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const { isAdmin } = useAdmin();
-  // Filter navigation links based on authentication status and admin status for Quests Admin
+  // Filter navigation links based on authentication status and admin status for Contests Admin
   const visibleNavLinks = navLinks.filter(link => {
-    if (link.to === '/quests-admin') return !!user && isAdmin;
+    if (link.to === '/contests-admin') return !!user && isAdmin;
     return !link.requiresAuth || !!user;
   });
 
