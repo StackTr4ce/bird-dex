@@ -30,6 +30,7 @@ const SelectPhotoModal = ({ open, onClose, onSelect }: SelectPhotoModalProps) =>
 
   useEffect(() => {
     if (!user || !open) return;
+    let isMounted = true;
     setLoading(true);
     const fetchPhotos = async () => {
       const from = (page - 1) * PAGE_SIZE;
@@ -40,11 +41,14 @@ const SelectPhotoModal = ({ open, onClose, onSelect }: SelectPhotoModalProps) =>
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .range(from, to);
-      setPhotos(data || []);
-      setTotal(count || 0);
-      setLoading(false);
+      if (isMounted) {
+        setPhotos(data || []);
+        setTotal(count || 0);
+        setLoading(false);
+      }
     };
     fetchPhotos();
+    return () => { isMounted = false; };
   }, [user, open, page]);
 
   const handleSelect = (photo: UserPhoto) => {
@@ -56,41 +60,62 @@ const SelectPhotoModal = ({ open, onClose, onSelect }: SelectPhotoModalProps) =>
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Select a Photo</DialogTitle>
-      <DialogContent>
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
-            {photos.map(photo => (
-              <Box
-                key={photo.id}
-                sx={{ cursor: 'pointer', border: '2px solid transparent', borderRadius: 2, '&:hover': { borderColor: 'primary.main' } }}
-                onClick={() => handleSelect(photo)}
-              >
-                <SupabaseImage path={photo.thumbnail_url || photo.url} alt="User photo" style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8 }} />
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'center' }}>
-                  {new Date(photo.created_at).toLocaleDateString()}
-                </Typography>
-              </Box>
-            ))}
-            {photos.length === 0 && !loading && (
-              <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 4 }}>
-                <Typography color="text.secondary">No photos found.</Typography>
-              </Box>
-            )}
-          </Box>
-        )}
+      <DialogTitle>Select a Photo for Contest</DialogTitle>
+      <DialogContent sx={{ background: theme => theme.palette.background.paper, p: 0 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, minHeight: 200, position: 'relative', background: theme => theme.palette.background.paper, p: 2, borderRadius: 2 }}>
+          {loading && (
+            <Box sx={{ position: 'absolute', inset: 0, zIndex: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', background: theme => theme.palette.background.paper, opacity: 0.85, borderRadius: 2 }}>
+              <CircularProgress />
+            </Box>
+          )}
+          {photos.map(photo => (
+            <Box
+              key={photo.id}
+              sx={{
+                cursor: 'pointer',
+                border: '2px solid transparent',
+                borderRadius: 2,
+                '&:hover': { borderColor: 'primary.main' },
+                aspectRatio: '1 / 1',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                p: 0,
+                opacity: loading ? 0.5 : 1,
+                background: theme => theme.palette.background.paper
+              }}
+              onClick={() => !loading && handleSelect(photo)}
+            >
+              <SupabaseImage
+                path={photo.thumbnail_url || photo.url}
+                alt="User photo"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  aspectRatio: '1 / 1',
+                  display: 'block',
+                  background: 'transparent',
+                  borderRadius: 0
+                }}
+              />
+            </Box>
+          ))}
+          {photos.length === 0 && !loading && (
+            <Box sx={{ gridColumn: '1 / -1', textAlign: 'center', py: 4 }}>
+              <Typography color="text.secondary">No photos found.</Typography>
+            </Box>
+          )}
+        </Box>
       </DialogContent>
-      <DialogActions sx={{ justifyContent: 'space-between' }}>
+      <DialogActions sx={{ justifyContent: 'space-between', background: theme => theme.palette.background.paper }}>
         <Box>
           <Button onClick={onClose}>Cancel</Button>
         </Box>
         <Box>
-          <Button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Previous</Button>
-          <Button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0}>Next</Button>
+          <Button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1 || loading}>Previous</Button>
+          <Button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0 || loading}>Next</Button>
           <Typography variant="caption" sx={{ ml: 2 }}>{`Page ${page} of ${totalPages || 1}`}</Typography>
         </Box>
       </DialogActions>

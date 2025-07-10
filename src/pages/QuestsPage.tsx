@@ -1,12 +1,13 @@
 
+
 import { useEffect, useState } from 'react';
 import {
-  Box, Typography, Paper, CircularProgress, List, ListItemButton, ListItemText
+  Box, Typography, Paper, CircularProgress
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
-interface Quest {
+interface Contest {
   id: string;
   name: string;
   description: string;
@@ -16,15 +17,15 @@ interface Quest {
 
 const QuestsPage = () => {
   const [loading, setLoading] = useState(true);
-  const [activeQuests, setActiveQuests] = useState<Quest[]>([]);
-  const [pastQuests, setPastQuests] = useState<Quest[]>([]);
+  const [activeContests, setActiveContests] = useState<Contest[]>([]);
+  const [pastContests, setPastContests] = useState<Contest[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchQuests = async () => {
+    const fetchContests = async () => {
       setLoading(true);
-      const { data: quests, error } = await supabase
-        .from('quests')
+      const { data: contests, error } = await supabase
+        .from('quests') // Change to 'contests' if your table is renamed
         .select('*')
         .order('start_time', { ascending: true });
       if (error) {
@@ -32,25 +33,25 @@ const QuestsPage = () => {
         return;
       }
       const now = new Date();
-      setActiveQuests(
-        (quests || []).filter(q => new Date(q.end_time) >= now)
+      setActiveContests(
+        (contests || []).filter(c => new Date(c.end_time) >= now)
       );
-      setPastQuests(
-        (quests || []).filter(q => new Date(q.end_time) < now)
+      setPastContests(
+        (contests || []).filter(c => new Date(c.end_time) < now)
       );
       setLoading(false);
     };
-    fetchQuests();
+    fetchContests();
   }, []);
 
-  const handleQuestClick = (questId: string) => {
-    navigate(`/quests/${questId}`);
+  const handleContestClick = (contestId: string) => {
+    navigate(`/contests/${contestId}`);
   };
 
   return (
-    <Box>
-      <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
-        Contests
+    <Box sx={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'background.default', py: 4 }}>
+      <Typography align="center" variant="h3" fontWeight={800} gutterBottom sx={{ letterSpacing: 1, mb: 3 }}>
+        BirdDex Contests
       </Typography>
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
@@ -58,49 +59,95 @@ const QuestsPage = () => {
         </Box>
       ) : (
         <>
-          <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>Active Contests</Typography>
-          <Paper variant="outlined">
-            <List>
-              {activeQuests.length === 0 && (
-                <ListItemText primary="No active contests." sx={{ p: 2 }} />
-              )}
-              {activeQuests.map(q => (
-                <ListItemButton key={q.id} onClick={() => handleQuestClick(q.id)}>
-                  <ListItemText
-                    primary={q.name}
-                    secondary={
-                      <>
-                        <span>{q.description}</span><br />
-                        <span>Ends: {new Date(q.end_time).toLocaleString()}</span>
-                      </>
-                    }
-                  />
-                </ListItemButton>
-              ))}
-            </List>
-          </Paper>
+          <Typography variant="h5" align="center" sx={{ mt: 2, mb: 2, fontWeight: 700, letterSpacing: 0.5 }}>Active Contests</Typography>
+          <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {activeContests.length === 0 ? (
+              <Paper variant="outlined" sx={{ width: { xs: '98%', sm: '90%', md: '70%' }, p: 3, textAlign: 'center', mb: 2 }}>
+                <Typography>No active contests.</Typography>
+              </Paper>
+            ) : (
+              activeContests.map(c => (
+                <Paper
+                  key={c.id}
+                  variant="outlined"
+                  sx={{
+                    width: { xs: '98%', sm: '90%', md: '70%' },
+                    mb: 3,
+                    p: 0,
+                    borderRadius: 4,
+                    boxShadow: 2,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'box-shadow 0.2s',
+                    '&:hover': { boxShadow: 6, borderColor: 'primary.main' },
+                  }}
+                  onClick={() => handleContestClick(c.id)}
+                >
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 3fr 2fr' }, alignItems: 'stretch', width: '100%', minHeight: 90 }}>
+                    <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, borderRight: { sm: '1px solid #eee' }, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                      <Typography variant="subtitle1" fontWeight={700} color="primary.main" sx={{ mb: 1, fontSize: { xs: 16, sm: 18 } }}>{c.name}</Typography>
+                    </Box>
+                    <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                      <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: 15, sm: 16 } }}>{c.description}</Typography>
+                    </Box>
+                    <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, borderLeft: { sm: '1px solid #eee' }, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                        {new Date(c.start_time).toLocaleDateString()} - {new Date(c.end_time).toLocaleDateString()}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Ends: {new Date(c.end_time).toLocaleTimeString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              ))
+            )}
+          </Box>
 
-          <Typography variant="h6" sx={{ mt: 4, mb: 1 }}>Past Contests</Typography>
-          <Paper variant="outlined">
-            <List>
-              {pastQuests.length === 0 && (
-                <ListItemText primary="No past contests." sx={{ p: 2 }} />
-              )}
-              {pastQuests.map(q => (
-                <ListItemButton key={q.id} onClick={() => handleQuestClick(q.id)}>
-                  <ListItemText
-                    primary={q.name}
-                    secondary={
-                      <>
-                        <span>{q.description}</span><br />
-                        <span>Ended: {new Date(q.end_time).toLocaleString()}</span>
-                      </>
-                    }
-                  />
-                </ListItemButton>
-              ))}
-            </List>
-          </Paper>
+          <Typography variant="h5" align="center" sx={{ mt: 5, mb: 2, fontWeight: 700, letterSpacing: 0.5 }}>Past Contests</Typography>
+          <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {pastContests.length === 0 ? (
+              <Paper variant="outlined" sx={{ width: { xs: '98%', sm: '90%', md: '70%' }, p: 3, textAlign: 'center', mb: 2 }}>
+                <Typography>No past contests.</Typography>
+              </Paper>
+            ) : (
+              pastContests.map(c => (
+                <Paper
+                  key={c.id}
+                  variant="outlined"
+                  sx={{
+                    width: { xs: '98%', sm: '90%', md: '70%' },
+                    mb: 3,
+                    p: 0,
+                    borderRadius: 4,
+                    boxShadow: 1,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'box-shadow 0.2s',
+                    '&:hover': { boxShadow: 5, borderColor: 'primary.main' },
+                  }}
+                  onClick={() => handleContestClick(c.id)}
+                >
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 3fr 2fr' }, alignItems: 'stretch', width: '100%', minHeight: 90 }}>
+                    <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, borderRight: { sm: '1px solid #eee' }, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                      <Typography variant="subtitle1" fontWeight={700} color="primary.main" sx={{ mb: 1, fontSize: { xs: 16, sm: 18 } }}>{c.name}</Typography>
+                    </Box>
+                    <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                      <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: 15, sm: 16 } }}>{c.description}</Typography>
+                    </Box>
+                    <Box sx={{ px: { xs: 2, sm: 3 }, py: 2, borderLeft: { sm: '1px solid #eee' }, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                        {new Date(c.start_time).toLocaleDateString()} - {new Date(c.end_time).toLocaleDateString()}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Ended: {new Date(c.end_time).toLocaleTimeString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              ))
+            )}
+          </Box>
         </>
       )}
     </Box>

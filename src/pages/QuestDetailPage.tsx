@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+// Remove entry dialog state and handler (must be at top level)
+// (moved below imports)
 import { useParams } from 'react-router-dom';
 import { Box, Typography, Paper, CircularProgress, Button, Stack, Avatar, Chip } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { supabase } from '../supabaseClient';
 import SelectPhotoModal from '../components/SelectPhotoModal';
@@ -41,6 +44,21 @@ interface Photo {
 }
 
 const QuestDetailPage = () => {
+  // Remove entry dialog state and handler (must be at top level)
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  const handleRemoveEntry = async () => {
+    if (!myEntry) return;
+    setRemoving(true);
+    await supabase.from('quest_votes').delete().eq('entry_id', myEntry.id);
+    await supabase.from('quest_entries').delete().eq('id', myEntry.id);
+    setShowRemoveDialog(false);
+    setRemoving(false);
+    const { data: entriesData } = await supabase.from('quest_entries').select('*').eq('quest_id', questId);
+    setEntries(entriesData || []);
+    setMyEntry(null);
+  };
   const { questId } = useParams();
   const { user } = useAuth();
   const [quest, setQuest] = useState<Quest | null>(null);
@@ -116,7 +134,7 @@ const QuestDetailPage = () => {
   useEffect(() => {
     const fetchVote = async () => {
       if (!user || !questId) return;
-      const { data } = await supabase.from('quest_votes').select('entry_id').eq('voter_id', user.id).eq('quest_id', questId).single();
+      const { data } = await supabase.from('quest_votes').select('entry_id').eq('voter_id', user.id).eq('quest_id', questId).maybeSingle();
       setVotedEntryId(data?.entry_id || null);
     };
     fetchVote();
@@ -128,6 +146,18 @@ const QuestDetailPage = () => {
     // Upsert vote using voter_id
     await supabase.from('quest_votes').upsert({ voter_id: user.id, quest_id: questId, entry_id: entryId }, { onConflict: 'voter_id,quest_id' });
     setVotedEntryId(entryId);
+
+    // Refetch vote counts for all entries (to ensure accuracy)
+    const { data: votesData } = await supabase
+      .from('quest_votes')
+      .select('entry_id')
+      .in('entry_id', entries.map((e) => e.id));
+    const voteMap: Record<string, number> = {};
+    (votesData || []).forEach((v: { entry_id: string }) => {
+      voteMap[v.entry_id] = (voteMap[v.entry_id] || 0) + 1;
+    });
+    setVoteCounts(voteMap);
+
     setSubmittingVote(false);
   };
 
@@ -272,11 +302,80 @@ const QuestDetailPage = () => {
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {`Start: ${new Date(quest.start_time).toLocaleString()} | End: ${new Date(quest.end_time).toLocaleString()}`}
       </Typography>
+      {/* Remove entry dialog state and handler */}
       <Box sx={{ mb: 2 }}>
         {myEntry && photoMap[myEntry.photo_id] ? (
-          <Paper variant="outlined" sx={{ p: 2, mb: 2, border: '2.5px solid', borderColor: 'primary.main', background: 'rgba(0,0,0,0.04)' }}>
-            <Typography variant="subtitle1" color="primary">Your Entry</Typography>
-            <SupabaseImage path={photoMap[myEntry.photo_id].url} width={240} height={240} style={{ borderRadius: 8, marginTop: 8 }} />
+          <Paper
+            variant="outlined"
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              mb: 2,
+              border: '2.5px solid',
+              borderColor: 'primary.main',
+              background: 'rgba(0,0,0,0.04)',
+              borderRadius: 3,
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              minHeight: { xs: 320, sm: 340 },
+              boxShadow: { xs: 0, sm: 2 },
+              overflow: 'hidden',
+            }}
+          >
+            <Typography variant="subtitle1" color="primary" sx={{ mb: 1, fontWeight: 600, fontSize: { xs: 16, sm: 18 } }}>Your Entry</Typography>
+            <Box
+              sx={{
+                width: { xs: 180, sm: 240 },
+                height: { xs: 180, sm: 240 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 2,
+                overflow: 'hidden',
+                boxShadow: 1,
+                mb: 2,
+              }}
+            >
+              <SupabaseImage path={photoMap[myEntry.photo_id].url} width={240} height={240} style={{ borderRadius: 12, width: '100%', height: '100%', objectFit: 'cover' }} />
+            </Box>
+            {/* Vote count and Remove button at bottom */}
+            <Box sx={{ width: '100%', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', mt: 'auto', gap: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 1, mb: { xs: 0.5, sm: 0 } }}>
+                {voteCounts[myEntry.id] || 0} vote{(voteCounts[myEntry.id] || 0) === 1 ? '' : 's'}
+              </Typography>
+              <Button
+                color="error"
+                variant="outlined"
+                size="small"
+                sx={{
+                  borderRadius: 2,
+                  fontWeight: 500,
+                  mb: 0.5,
+                  mr: 0.5,
+                  minWidth: 120,
+                  boxShadow: 1,
+                  position: { xs: 'static', sm: 'static' },
+                }}
+                onClick={() => setShowRemoveDialog(true)}
+              >
+                Withdraw Photo
+              </Button>
+            </Box>
+            <Dialog open={showRemoveDialog} onClose={() => setShowRemoveDialog(false)}>
+              <DialogTitle>Remove Your Photo from Contest?</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Are you sure you want to remove your photo from this contest? <b>This will permanently delete your entry and any votes it has received.</b>
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setShowRemoveDialog(false)} disabled={removing}>Cancel</Button>
+                <Button onClick={handleRemoveEntry} color="error" variant="contained" disabled={removing}>
+                  {removing ? 'Removing...' : 'Remove Photo'}
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Paper>
         ) : (
           user && <Button variant="contained" onClick={() => setShowSelectModal(true)}>Submit Your Entry</Button>
@@ -323,7 +422,7 @@ const QuestDetailPage = () => {
                 variant={votedEntryId === entry.id ? 'contained' : 'outlined'}
                 color={votedEntryId === entry.id ? 'primary' : 'inherit'}
                 size="small"
-                disabled={submittingVote}
+                disabled={submittingVote || votedEntryId === entry.id}
                 onClick={() => handleVote(entry.id)}
                 sx={{ mt: 1 }}
               >
