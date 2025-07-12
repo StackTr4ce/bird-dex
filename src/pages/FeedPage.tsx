@@ -378,11 +378,8 @@ const FeedPage = () => {
               <Card key={photo.id} elevation={2} sx={{ width: '100%' }}>
                 {/* Header */}
                 <CardContent sx={{ pb: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                      {photo.user_profile.display_name.charAt(0).toUpperCase()}
-                    </Avatar>
-                    <Box sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, pl: 1, pr: 1 }}>
+                    <Box sx={{ textAlign: 'left' }}>
                       <Typography variant="subtitle1" fontWeight={600}>
                         {photo.user_profile.display_name}
                       </Typography>
