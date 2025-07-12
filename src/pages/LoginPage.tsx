@@ -33,6 +33,7 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -60,7 +61,13 @@ const LoginPage = () => {
       if (mode === 'login') {
         await signIn(email, password);
       } else {
-        await signUp(email, password);
+        const result = await signUp(email, password);
+        if (result.isExistingUser) {
+          setError(`An account with ${email} already exists. Please sign in instead or check your email for a previous confirmation link.`);
+        } else if (result.needsConfirmation) {
+          setConfirmationSent(true);
+          setError(null);
+        }
       }
     } catch (err: any) {
       console.error(`${mode} error:`, err);
@@ -74,6 +81,7 @@ const LoginPage = () => {
     setError(null);
     setEmail('');
     setPassword('');
+    setConfirmationSent(false);
   };
 
   const togglePasswordVisibility = () => {
@@ -143,9 +151,48 @@ const LoginPage = () => {
           {/* Form */}
           <Box component="form" onSubmit={handleSubmit}>
             <Stack spacing={3}>
+              {/* Confirmation Sent Alert */}
+              {confirmationSent && mode === 'signup' && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  <Typography variant="body2" fontWeight={600} gutterBottom>
+                    Check your email!
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2 }}>
+                    We've sent a confirmation link to <strong>{email}</strong>. 
+                    Please check your email and click the link to complete your account setup.
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => setConfirmationSent(false)}
+                    >
+                      Use Different Email
+                    </Button>
+                  </Box>
+                </Alert>
+              )}
+
               {/* Error Alert */}
               {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert 
+                  severity="error" 
+                  sx={{ mb: 2 }}
+                  action={
+                    error.includes('already exists') ? (
+                      <Button 
+                        color="inherit" 
+                        size="small" 
+                        onClick={() => {
+                          setMode('login');
+                          setError(null);
+                        }}
+                      >
+                        Sign In
+                      </Button>
+                    ) : undefined
+                  }
+                >
                   {error}
                 </Alert>
               )}
@@ -160,7 +207,7 @@ const LoginPage = () => {
                 required
                 variant="outlined"
                 autoComplete="email"
-                disabled={loading}
+                disabled={loading || (confirmationSent && mode === 'signup')}
                 size="medium"
               />
 
@@ -174,7 +221,7 @@ const LoginPage = () => {
                 required
                 variant="outlined"
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                disabled={loading}
+                disabled={loading || (confirmationSent && mode === 'signup')}
                 size="medium"
                 InputProps={{
                   endAdornment: (
@@ -182,7 +229,7 @@ const LoginPage = () => {
                       <IconButton
                         onClick={togglePasswordVisibility}
                         edge="end"
-                        disabled={loading}
+                        disabled={loading || (confirmationSent && mode === 'signup')}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
@@ -198,10 +245,12 @@ const LoginPage = () => {
                 fullWidth
                 variant="contained"
                 size="large"
-                disabled={loading}
+                disabled={loading || (confirmationSent && mode === 'signup')}
                 startIcon={
                   loading ? (
                     <CircularProgress size={20} color="inherit" />
+                  ) : confirmationSent && mode === 'signup' ? (
+                    <SignUpIcon />
                   ) : mode === 'login' ? (
                     <LoginIcon />
                   ) : (
@@ -212,43 +261,47 @@ const LoginPage = () => {
               >
                 {loading 
                   ? 'Please wait...' 
-                  : mode === 'login' 
-                    ? 'Sign In' 
-                    : 'Create Account'
+                  : confirmationSent && mode === 'signup'
+                    ? 'Confirmation Email Sent'
+                    : mode === 'login' 
+                      ? 'Sign In' 
+                      : 'Create Account'
                 }
               </Button>
             </Stack>
           </Box>
 
           {/* Mode Toggle */}
-          <Box sx={{ mt: 4, textAlign: 'center' }}>
-            <Divider sx={{ mb: 2 }}>
+          {!(confirmationSent && mode === 'signup') && (
+            <Box sx={{ mt: 4, textAlign: 'center' }}>
+              <Divider sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  OR
+                </Typography>
+              </Divider>
+              
               <Typography variant="body2" color="text.secondary">
-                OR
+                {mode === 'login' 
+                  ? "Don't have an account? " 
+                  : "Already have an account? "
+                }
+                <Link
+                  component="button"
+                  type="button"
+                  variant="body2"
+                  onClick={toggleMode}
+                  disabled={loading}
+                  sx={{ 
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    '&:hover': { textDecoration: 'underline' }
+                  }}
+                >
+                  {mode === 'login' ? 'Sign Up' : 'Sign In'}
+                </Link>
               </Typography>
-            </Divider>
-            
-            <Typography variant="body2" color="text.secondary">
-              {mode === 'login' 
-                ? "Don't have an account? " 
-                : "Already have an account? "
-              }
-              <Link
-                component="button"
-                type="button"
-                variant="body2"
-                onClick={toggleMode}
-                disabled={loading}
-                sx={{ 
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                  '&:hover': { textDecoration: 'underline' }
-                }}
-              >
-                {mode === 'login' ? 'Sign Up' : 'Sign In'}
-              </Link>
-            </Typography>
-          </Box>
+            </Box>
+          )}
 
           {/* Footer */}
           <Box sx={{ mt: 3, textAlign: 'center' }}>

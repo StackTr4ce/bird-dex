@@ -10,7 +10,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<{ needsConfirmation?: boolean; isExistingUser?: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -49,10 +49,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
         throw error;
       }
+      
+      // Check if confirmation is needed (when confirmation_sent_at exists)
+      const needsConfirmation = Boolean(data.user?.confirmation_sent_at);
+      
+      // Check if this is an existing user (empty identities array indicates resend confirmation)
+      const isExistingUser = Boolean(
+        data.user && 
+        data.user.identities && 
+        data.user.identities.length === 0 &&
+        needsConfirmation
+      );
+      
+      return { needsConfirmation, isExistingUser };
     } finally {
       setLoading(false);
     }
