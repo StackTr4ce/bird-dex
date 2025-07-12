@@ -15,6 +15,8 @@ import {
   CircularProgress,
   Stack,
   Paper,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   EmojiEvents as TrophyIcon,
@@ -36,6 +38,8 @@ interface LeaderboardEntry {
 
 const LeaderboardPage = () => {
   const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState<number | null>(null);
@@ -178,6 +182,82 @@ const LeaderboardPage = () => {
     }
   };
 
+  // Mobile-friendly leaderboard card component
+  const MobileLeaderboardCard = ({ entry }: { entry: LeaderboardEntry }) => (
+    <Card 
+      key={entry.user_id}
+      sx={{ 
+        mb: 2,
+        bgcolor: entry.user_id === user?.id ? 'action.selected' : 'inherit',
+        border: entry.user_id === user?.id ? 2 : 1,
+        borderColor: entry.user_id === user?.id ? 'primary.main' : 'divider',
+      }}
+    >
+      <CardContent sx={{ py: 2 }}>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          {/* Rank */}
+          <Box sx={{ minWidth: 60, textAlign: 'center' }}>
+            {getRankIcon(entry.rank)}
+          </Box>
+          
+          {/* User Info */}
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+                {entry.display_name.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                <Typography 
+                  variant="subtitle1" 
+                  fontWeight={600}
+                  sx={{ 
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'left'
+                  }}
+                >
+                  {entry.display_name}
+                  {entry.user_id === user?.id && (
+                    <Chip 
+                      label="You" 
+                      size="small" 
+                      color="primary" 
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </Typography>
+              </Box>
+            </Stack>
+            
+            {/* Stats */}
+            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Species
+                </Typography>
+                <Chip 
+                  label={entry.unique_species}
+                  color={entry.unique_species > 0 ? 'success' : 'default'}
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Photos
+                </Typography>
+                <Typography variant="body2" fontWeight={500}>
+                  {entry.total_photos}
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
@@ -187,7 +267,7 @@ const LeaderboardPage = () => {
   }
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: 1200 }, mx: 'auto', px: { xs: 1, sm: 2 } }}>
       <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
         Leaderboard
       </Typography>
@@ -201,12 +281,17 @@ const LeaderboardPage = () => {
       {/* User's Current Rank */}
       {user && userRank && (
         <Card sx={{ mb: 3, bgcolor: 'grey.800', border: '1px solid', borderColor: 'grey.600' }}>
-          <CardContent>
-            <Stack direction="row" alignItems="center" spacing={2}>
-              <Avatar sx={{ bgcolor: 'grey.700', width: 56, height: 56 }}>
+          <CardContent sx={{ py: { xs: 2, md: 3 } }}>
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              alignItems={{ xs: 'flex-start', sm: 'center' }} 
+              spacing={2}
+              sx={{ textAlign: { xs: 'left', sm: 'inherit' } }}
+            >
+              <Avatar sx={{ bgcolor: 'grey.700', width: { xs: 48, md: 56 }, height: { xs: 48, md: 56 } }}>
                 {getRankIcon(userRank)}
               </Avatar>
-              <Box sx={{ flexGrow: 1 }}>
+              <Box sx={{ flexGrow: 1, width: { xs: '100%', sm: 'auto' } }}>
                 <Typography variant="h6" fontWeight={600}>
                   Your Rank: #{userRank}
                   {userRank <= 3 && (
@@ -218,108 +303,117 @@ const LeaderboardPage = () => {
                     />
                   )}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {leaderboard.find(entry => entry.user_id === user.id)?.unique_species || 0} unique species
-                </Typography>
               </Box>
               <Chip 
                 label={`${leaderboard.find(entry => entry.user_id === user.id)?.unique_species || 0} species`}
                 color={getRankBadgeColor(userRank)}
                 variant="filled"
+                sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
               />
             </Stack>
           </CardContent>
         </Card>
       )}
 
-      {/* Leaderboard Table */}
-      <Card>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Rank</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700 }}>
-                  <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                    <SpeciesIcon fontSize="small" />
-                    <span>Species</span>
-                  </Stack>
-                </TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700 }}>
-                  <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                    <PhotoIcon fontSize="small" />
-                    <span>Photos</span>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {leaderboard.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      No users found. Start uploading photos to appear on the leaderboard!
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                leaderboard.map((entry) => (
-                  <TableRow 
-                    key={entry.user_id}
-                    sx={{ 
-                      bgcolor: entry.user_id === user?.id ? 'action.selected' : 'inherit',
-                      '&:hover': { bgcolor: 'action.hover' }
-                    }}
-                  >
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {getRankIcon(entry.rank)}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar sx={{ bgcolor: 'primary.main' }}>
-                          {entry.display_name.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={600}>
-                            {entry.display_name}
-                            {entry.user_id === user?.id && (
-                              <Chip 
-                                label="You" 
-                                size="small" 
-                                color="primary" 
-                                sx={{ ml: 1 }}
-                              />
-                            )}
+      {/* Responsive Leaderboard */}
+      {leaderboard.length === 0 ? (
+        <Card>
+          <CardContent sx={{ py: 4, textAlign: 'center' }}>
+            <Typography variant="body1" color="text.secondary">
+              No users found. Start uploading photos to appear on the leaderboard!
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Mobile View: Cards */}
+          {isMobile ? (
+            <Box>
+              {leaderboard.map((entry) => (
+                <MobileLeaderboardCard key={entry.user_id} entry={entry} />
+              ))}
+            </Box>
+          ) : (
+            /* Desktop View: Table */
+            <Card>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 700 }}>Rank</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700 }}>
+                        <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                          <SpeciesIcon fontSize="small" />
+                          <span>Species</span>
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700 }}>
+                        <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
+                          <PhotoIcon fontSize="small" />
+                          <span>Photos</span>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {leaderboard.map((entry) => (
+                      <TableRow 
+                        key={entry.user_id}
+                        sx={{ 
+                          bgcolor: entry.user_id === user?.id ? 'action.selected' : 'inherit',
+                          '&:hover': { bgcolor: 'action.hover' }
+                        }}
+                      >
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {getRankIcon(entry.rank)}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Avatar sx={{ bgcolor: 'primary.main' }}>
+                              {entry.display_name.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle2" fontWeight={600}>
+                                {entry.display_name}
+                                {entry.user_id === user?.id && (
+                                  <Chip 
+                                    label="You" 
+                                    size="small" 
+                                    color="primary" 
+                                    sx={{ ml: 1 }}
+                                  />
+                                )}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip 
+                            label={entry.unique_species}
+                            color={entry.unique_species > 0 ? 'success' : 'default'}
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography variant="body2" fontWeight={500}>
+                            {entry.total_photos}
                           </Typography>
-                          {/* Email removed: not available in public view */}
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip 
-                        label={entry.unique_species}
-                        color={entry.unique_species > 0 ? 'success' : 'default'}
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body2" fontWeight={500}>
-                        {entry.total_photos}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Card>
+          )}
+        </>
+      )}
 
       {/* Footer Info */}
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
+      <Box sx={{ mt: 3, textAlign: 'center', px: 1 }}>
         <Typography variant="body2" color="text.secondary">
           <EyeIcon fontSize="small" sx={{ color: 'action.active', verticalAlign: 'middle', mr: 0.5 }} />
           Only photos visible in the "dex" (species view) are counted. Hidden photos are excluded from the leaderboard.
