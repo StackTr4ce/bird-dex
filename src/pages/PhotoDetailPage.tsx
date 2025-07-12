@@ -126,29 +126,55 @@ export default function PhotoDetailPage() {
   });
 
   return (
-    <Box sx={{ mx: 'auto', mt: 4, p: 2 }}>
-      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3 }}>
-        <Box sx={{ flex: 1, minWidth: 0, maxWidth: 420, width: 420 }}>
-          <Paper elevation={2} sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', minHeight: 320, height: '100%' }}>
+    <Box sx={{ mx: 'auto', mt: 4, p: 2, maxWidth: 1200 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 3, 
+        flexDirection: { xs: 'column', md: 'row' },
+        mb: 3 
+      }}>
+        <Box sx={{ 
+          flex: 1, 
+          minWidth: 0, 
+          width: '100%',
+          maxWidth: { xs: '100%', md: 420 }
+        }}>
+          <Paper elevation={2} sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: 320, height: '100%', position: 'relative' }}>
             {speciesId && (
-              <Typography variant="h6" gutterBottom sx={{ width: '100%', textAlign: 'center', mb: 2 }}>
+              <Typography variant="h6" gutterBottom sx={{ position: 'absolute', top: 16, left: 0, right: 0, textAlign: 'center', mb: 0 }}>
                 {speciesId}
               </Typography>
             )}
-            {photoUrl ? (
-              <SupabaseImage path={photoUrl} alt="Bird" style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }} />
-            ) : (
-              <Box sx={{ width: 300, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#eee', borderRadius: 2 }}>
-                <Typography variant="body2" color="text.secondary">No Image Available</Typography>
-              </Box>
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+              {photoUrl ? (
+                <SupabaseImage path={photoUrl} alt="Bird" style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }} />
+              ) : (
+                <Box sx={{ width: '100%', maxWidth: 300, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#eee', borderRadius: 2 }}>
+                  <Typography variant="body2" color="text.secondary">No Image Available</Typography>
+                </Box>
+              )}
+            </Box>
           </Paper>
         </Box>
-        <Box sx={{ flex: 1, minWidth: 0, maxWidth: 420, width: 420 }}>
+        <Box sx={{ 
+          flex: 1, 
+          minWidth: 0, 
+          width: '100%',
+          maxWidth: { xs: '100%', md: 420 }
+        }}>
           <Paper elevation={2} sx={{ p: 2, minHeight: 320, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <Typography variant="h6" gutterBottom>Map Location</Typography>
             {lat != null && lng != null ? (
-              <Box sx={{ width: '100%', height: { xs: 250, md: 320 }, borderRadius: 2, overflow: 'hidden', mb: 1, minWidth: 0, minHeight: 250, maxHeight: 320 }}>
+              <Box sx={{ 
+                width: '100%', 
+                height: { xs: 250, md: 320 }, 
+                borderRadius: 2, 
+                overflow: 'hidden', 
+                mb: 1, 
+                minWidth: 0, 
+                minHeight: 250, 
+                maxHeight: 320 
+              }}>
                 <MapContainer
                   center={[lat, lng]}
                   zoom={13}
@@ -183,7 +209,19 @@ export default function PhotoDetailPage() {
                 </MapContainer>
               </Box>
             ) : (
-              <Box sx={{ width: '100%', height: { xs: 250, md: 320 }, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2, background: '#f5f5f5', mb: 1, minWidth: 0, minHeight: 250, maxHeight: 320 }}>
+              <Box sx={{ 
+                width: '100%', 
+                height: { xs: 250, md: 320 }, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                borderRadius: 2, 
+                background: '#f5f5f5', 
+                mb: 1, 
+                minWidth: 0, 
+                minHeight: 250, 
+                maxHeight: 320 
+              }}>
                 <Typography variant="body2" color="text.secondary">
                   No Location Set
                 </Typography>
@@ -193,7 +231,16 @@ export default function PhotoDetailPage() {
               <Typography
                 variant="body2"
                 color="text.secondary"
-                sx={{ mt: 2, width: '100%', minHeight: 28, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center', display: 'block' }}
+                sx={{ 
+                  mt: 2, 
+                  width: '100%', 
+                  minHeight: 28, 
+                  whiteSpace: 'nowrap', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis', 
+                  textAlign: 'center', 
+                  display: 'block' 
+                }}
                 title={locationText}
               >
                 {locationText.length > 30 ? locationText.slice(0, 30) + '…' : locationText}
@@ -237,7 +284,13 @@ export default function PhotoDetailPage() {
               />
               {/* If no lat/lng, show Set in Map button */}
               {lat == null || lng == null ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: { xs: 'stretch', sm: 'center' }, 
+                  gap: 2, 
+                  mt: 2 
+                }}>
                   <Button
                     variant="outlined"
                     onClick={async () => {
@@ -260,22 +313,23 @@ export default function PhotoDetailPage() {
                         setLng(-87.6298);
                       }
                     }}
+                    sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
                   >
                     Set in Map
                   </Button>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
                     Set your location using your device or defaults to Chicago, IL.
                   </Typography>
                 </Box>
               ) : (
-                <Stack direction="row" spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                   <TextField
                     label="Latitude"
                     type="number"
                     value={lat ?? ''}
                     onChange={e => setLat(e.target.value === '' ? null : parseFloat(e.target.value))}
                     inputProps={{ step: 'any' }}
-                    sx={{ width: 180 }}
+                    sx={{ width: { xs: '100%', sm: 180 } }}
                   />
                   <TextField
                     label="Longitude"
@@ -283,11 +337,11 @@ export default function PhotoDetailPage() {
                     value={lng ?? ''}
                     onChange={e => setLng(e.target.value === '' ? null : parseFloat(e.target.value))}
                     inputProps={{ step: 'any' }}
-                    sx={{ width: 180 }}
+                    sx={{ width: { xs: '100%', sm: 180 } }}
                   />
                 </Stack>
               )}
-              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 2 }}>
                 <Button
                   variant="contained"
                   color="primary"
@@ -318,6 +372,7 @@ export default function PhotoDetailPage() {
                     setEditing(false);
                     setSaving(false);
                   }}
+                  sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
                 >
                   Save
                 </Button>
@@ -325,6 +380,7 @@ export default function PhotoDetailPage() {
                   variant="outlined"
                   disabled={saving}
                   onClick={() => setEditing(false)}
+                  sx={{ minWidth: { xs: '100%', sm: 'auto' } }}
                 >
                   Cancel
                 </Button>

@@ -267,7 +267,7 @@ const LeaderboardPage = () => {
   }
 
   return (
-    <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: 1200 }, mx: 'auto', px: { xs: 1, sm: 2 } }}>
+    <Box sx={{ maxWidth: 800, mx: 'auto', p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
       <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
         Leaderboard
       </Typography>
