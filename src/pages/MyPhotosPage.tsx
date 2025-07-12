@@ -434,14 +434,15 @@ export default function MyPhotosPage() {
                       <span>
                         <IconButton
                           aria-label="Set as Top Photo"
-                          sx={{ color: topSpeciesMap[photo.species_id] === photo.id ? '#FFD700' : '#b0b0b0', mr: 0.5 }}
+                          sx={{ color: topSpeciesMap[photo.species_id] === photo.id ? '#FFD700' : '#b0b0b0', mr: 0.25 }}
                           disabled={topSpeciesMap[photo.species_id] === photo.id}
                           onClick={() => handleSetAsTopPhoto(photo)}
+                          size="small"
                         >
                           {topSpeciesMap[photo.species_id] === photo.id ? (
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                           ) : (
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                           )}
                         </IconButton>
                       </span>
@@ -450,27 +451,30 @@ export default function MyPhotosPage() {
                     <Tooltip title="View Photo Details" arrow>
                       <IconButton
                         aria-label="View Photo Details"
-                        sx={{ color: 'primary.main', mr: 0.5 }}
+                        sx={{ color: 'primary.main', mr: 0.25 }}
                         onClick={() => window.location.assign(`/photo/${photo.id}`)}
+                        size="small"
                       >
-                        <InfoOutlinedIcon />
+                        <InfoOutlinedIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Toggle Dex visibility" arrow>
                       <IconButton
                         aria-label={photo.hidden_from_species_view ? "Show in Species Grid" : "Hide from Species Grid"}
-                        sx={{ color: photo.hidden_from_species_view ? '#b0b0b0' : 'primary.main', mr: 0.5 }}
+                        sx={{ color: photo.hidden_from_species_view ? '#b0b0b0' : 'primary.main', mr: 0.25 }}
                         onClick={() => handleToggleSpeciesView(photo)}
+                        size="small"
                       >
-                        {photo.hidden_from_species_view ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        {photo.hidden_from_species_view ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
                       </IconButton>
                     </Tooltip>
                     <IconButton
                       aria-label="Delete Photo"
                       sx={{ color: '#b0b0b0' }}
                       onClick={() => { setPhotoToDelete(photo); setDeleteDialogOpen(true); }}
+                      size="small"
                     >
-                      <DeleteIcon />
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
                 </CardActions>
