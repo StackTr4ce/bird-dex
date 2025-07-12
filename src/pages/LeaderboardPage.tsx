@@ -336,19 +336,19 @@ const LeaderboardPage = () => {
           ) : (
             /* Desktop View: Table */
             <Card>
-              <TableContainer component={Paper}>
-                <Table>
+              <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+                <Table sx={{ minWidth: 650 }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 700 }}>Rank</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      <TableCell sx={{ fontWeight: 700, width: '15%' }}>Rank</TableCell>
+                      <TableCell sx={{ fontWeight: 700, width: '50%' }}>User</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: '17.5%' }}>
                         <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
                           <SpeciesIcon fontSize="small" />
                           <span>Species</span>
                         </Stack>
                       </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700 }}>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: '17.5%' }}>
                         <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
                           <PhotoIcon fontSize="small" />
                           <span>Photos</span>
@@ -365,18 +365,26 @@ const LeaderboardPage = () => {
                           '&:hover': { bgcolor: 'action.hover' }
                         }}
                       >
-                        <TableCell>
+                        <TableCell sx={{ width: '15%' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {getRankIcon(entry.rank)}
                           </Box>
                         </TableCell>
-                        <TableCell>
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar sx={{ bgcolor: 'primary.main' }}>
+                        <TableCell sx={{ width: '50%', maxWidth: 0 }}>
+                          <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
+                            <Avatar sx={{ bgcolor: 'primary.main', flexShrink: 0 }}>
                               {entry.display_name.charAt(0).toUpperCase()}
                             </Avatar>
-                            <Box>
-                              <Typography variant="subtitle2" fontWeight={600}>
+                            <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                              <Typography 
+                                variant="subtitle2" 
+                                fontWeight={600}
+                                sx={{ 
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
                                 {entry.display_name}
                                 {entry.user_id === user?.id && (
                                   <Chip 
@@ -390,14 +398,14 @@ const LeaderboardPage = () => {
                             </Box>
                           </Stack>
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ width: '17.5%' }}>
                           <Chip 
                             label={entry.unique_species}
                             color={entry.unique_species > 0 ? 'success' : 'default'}
                             variant="outlined"
                           />
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ width: '17.5%' }}>
                           <Typography variant="body2" fontWeight={500}>
                             {entry.total_photos}
                           </Typography>

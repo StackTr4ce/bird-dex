@@ -425,6 +425,7 @@ export default function MyPhotosPage() {
                     endIcon={expandedComments.has(photo.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     onClick={() => toggleComments(photo.id)}
                     size="small"
+                    sx={{ fontSize: '0.75rem' }}
                   >
                     {photo.comment_count} {photo.comment_count === 1 ? 'Comment' : 'Comments'}
                   </Button>
