@@ -231,9 +231,9 @@ const LeaderboardPage = () => {
             </Stack>
             
             {/* Stats */}
-            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="caption" color="text.secondary" display="block">
+            <Stack direction="row" spacing={3} sx={{ mt: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
                   Species
                 </Typography>
                 <Chip 
@@ -243,11 +243,11 @@ const LeaderboardPage = () => {
                   size="small"
                 />
               </Box>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="caption" color="text.secondary" display="block">
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
                   Photos
                 </Typography>
-                <Typography variant="body2" fontWeight={500}>
+                <Typography variant="body2" fontWeight={500} sx={{ lineHeight: '24px' }}>
                   {entry.total_photos}
                 </Typography>
               </Box>
@@ -336,19 +336,19 @@ const LeaderboardPage = () => {
           ) : (
             /* Desktop View: Table */
             <Card>
-              <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-                <Table sx={{ minWidth: 650 }}>
+              <TableContainer component={Paper}>
+                <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 700, width: '15%' }}>Rank</TableCell>
-                      <TableCell sx={{ fontWeight: 700, width: '50%' }}>User</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: '17.5%' }}>
+                      <TableCell sx={{ fontWeight: 700, minWidth: 80 }}>Rank</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700, minWidth: 100 }}>
                         <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
                           <SpeciesIcon fontSize="small" />
                           <span>Species</span>
                         </Stack>
                       </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: '17.5%' }}>
+                      <TableCell align="center" sx={{ fontWeight: 700, minWidth: 80 }}>
                         <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
                           <PhotoIcon fontSize="small" />
                           <span>Photos</span>
@@ -365,12 +365,12 @@ const LeaderboardPage = () => {
                           '&:hover': { bgcolor: 'action.hover' }
                         }}
                       >
-                        <TableCell sx={{ width: '15%' }}>
+                        <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {getRankIcon(entry.rank)}
                           </Box>
                         </TableCell>
-                        <TableCell sx={{ width: '50%', maxWidth: 0 }}>
+                        <TableCell sx={{ maxWidth: 0 }}>
                           <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
                             <Avatar sx={{ bgcolor: 'primary.main', flexShrink: 0 }}>
                               {entry.display_name.charAt(0).toUpperCase()}
@@ -398,14 +398,14 @@ const LeaderboardPage = () => {
                             </Box>
                           </Stack>
                         </TableCell>
-                        <TableCell align="center" sx={{ width: '17.5%' }}>
+                        <TableCell align="center">
                           <Chip 
                             label={entry.unique_species}
                             color={entry.unique_species > 0 ? 'success' : 'default'}
                             variant="outlined"
                           />
                         </TableCell>
-                        <TableCell align="center" sx={{ width: '17.5%' }}>
+                        <TableCell align="center">
                           <Typography variant="body2" fontWeight={500}>
                             {entry.total_photos}
                           </Typography>
