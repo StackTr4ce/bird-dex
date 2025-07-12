@@ -191,30 +191,33 @@ const LeaderboardPage = () => {
         bgcolor: entry.user_id === user?.id ? 'action.selected' : 'inherit',
         border: entry.user_id === user?.id ? 2 : 1,
         borderColor: entry.user_id === user?.id ? 'primary.main' : 'divider',
+        width: '100%',
+        maxWidth: '100%',
       }}
     >
-      <CardContent sx={{ py: 2 }}>
-        <Stack direction="row" alignItems="center" spacing={2}>
+      <CardContent sx={{ py: 2, px: 2 }}>
+        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ width: '100%' }}>
           {/* Rank */}
-          <Box sx={{ minWidth: 60, textAlign: 'center' }}>
+          <Box sx={{ minWidth: 50, textAlign: 'center', flexShrink: 0 }}>
             {getRankIcon(entry.rank)}
           </Box>
           
           {/* User Info */}
-          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
-              <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+          <Box sx={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1, width: '100%' }}>
+              <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36, flexShrink: 0 }}>
                 {entry.display_name.charAt(0).toUpperCase()}
               </Avatar>
-              <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+              <Box sx={{ minWidth: 0, flexGrow: 1, width: '100%' }}>
                 <Typography 
-                  variant="subtitle1" 
+                  variant="subtitle2" 
                   fontWeight={600}
                   sx={{ 
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    textAlign: 'left'
+                    textAlign: 'left',
+                    fontSize: '0.9rem'
                   }}
                 >
                   {entry.display_name}
@@ -223,7 +226,7 @@ const LeaderboardPage = () => {
                       label="You" 
                       size="small" 
                       color="primary" 
-                      sx={{ ml: 1 }}
+                      sx={{ ml: 0.5, fontSize: '0.7rem', height: 20 }}
                     />
                   )}
                 </Typography>
@@ -231,9 +234,9 @@ const LeaderboardPage = () => {
             </Stack>
             
             {/* Stats */}
-            <Stack direction="row" spacing={3} sx={{ mt: 1 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+            <Stack direction="row" spacing={2} sx={{ mt: 1, width: '100%' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5, fontSize: '0.7rem' }}>
                   Species
                 </Typography>
                 <Chip 
@@ -241,13 +244,14 @@ const LeaderboardPage = () => {
                   color={entry.unique_species > 0 ? 'success' : 'default'}
                   variant="outlined"
                   size="small"
+                  sx={{ fontSize: '0.75rem', height: 22 }}
                 />
               </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5, fontSize: '0.7rem' }}>
                   Photos
                 </Typography>
-                <Typography variant="body2" fontWeight={500} sx={{ lineHeight: '24px' }}>
+                <Typography variant="body2" fontWeight={500} sx={{ lineHeight: '22px', fontSize: '0.8rem' }}>
                   {entry.total_photos}
                 </Typography>
               </Box>
@@ -267,7 +271,14 @@ const LeaderboardPage = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ 
+      maxWidth: 800, 
+      mx: 'auto', 
+      p: { xs: 1, sm: 3 },
+      width: '100%',
+      boxSizing: 'border-box',
+      overflowX: 'hidden'
+    }}>
       <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
         Leaderboard
       </Typography>
@@ -335,20 +346,20 @@ const LeaderboardPage = () => {
             </Box>
           ) : (
             /* Desktop View: Table */
-            <Card>
-              <TableContainer component={Paper}>
-                <Table>
+            <Card sx={{ width: '100%', overflowX: 'hidden' }}>
+              <TableContainer component={Paper} sx={{ width: '100%', overflowX: 'hidden' }}>
+                <Table sx={{ width: '100%', tableLayout: 'fixed' }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 700, minWidth: 80 }}>Rank</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, minWidth: 100 }}>
+                      <TableCell sx={{ fontWeight: 700, width: '15%' }}>Rank</TableCell>
+                      <TableCell sx={{ fontWeight: 700, width: '50%' }}>User</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: '17.5%' }}>
                         <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
                           <SpeciesIcon fontSize="small" />
                           <span>Species</span>
                         </Stack>
                       </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, minWidth: 80 }}>
+                      <TableCell align="center" sx={{ fontWeight: 700, width: '17.5%' }}>
                         <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
                           <PhotoIcon fontSize="small" />
                           <span>Photos</span>
@@ -365,12 +376,12 @@ const LeaderboardPage = () => {
                           '&:hover': { bgcolor: 'action.hover' }
                         }}
                       >
-                        <TableCell>
+                        <TableCell sx={{ width: '15%' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {getRankIcon(entry.rank)}
                           </Box>
                         </TableCell>
-                        <TableCell sx={{ maxWidth: 0 }}>
+                        <TableCell sx={{ width: '50%', maxWidth: 0 }}>
                           <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
                             <Avatar sx={{ bgcolor: 'primary.main', flexShrink: 0 }}>
                               {entry.display_name.charAt(0).toUpperCase()}
@@ -398,14 +409,14 @@ const LeaderboardPage = () => {
                             </Box>
                           </Stack>
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ width: '17.5%' }}>
                           <Chip 
                             label={entry.unique_species}
                             color={entry.unique_species > 0 ? 'success' : 'default'}
                             variant="outlined"
                           />
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ width: '17.5%' }}>
                           <Typography variant="body2" fontWeight={500}>
                             {entry.total_photos}
                           </Typography>
