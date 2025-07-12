@@ -139,9 +139,9 @@ export default function PhotoDetailPage() {
           width: '100%',
           maxWidth: { xs: '100%', md: 420 }
         }}>
-          <Paper elevation={2} sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: 320, height: '100%', position: 'relative' }}>
+          <Paper elevation={2} sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: 320, height: '100%' }}>
             {speciesId && (
-              <Typography variant="h6" gutterBottom sx={{ position: 'absolute', top: 16, left: 0, right: 0, textAlign: 'center', mb: 0 }}>
+              <Typography variant="h6" gutterBottom sx={{ textAlign: 'center', mb: 2 }}>
                 {speciesId}
               </Typography>
             )}
