@@ -63,7 +63,9 @@ const LoginPage = () => {
         await signUp(email, password);
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      console.error(`${mode} error:`, err);
+      const errorMessage = err.message || (mode === 'login' ? 'Login failed' : 'Sign up failed');
+      setError(errorMessage);
     }
   };
 
