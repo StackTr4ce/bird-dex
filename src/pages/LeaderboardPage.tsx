@@ -4,24 +4,15 @@ import {
   Typography,
   Card,
   CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Avatar,
   Chip,
   CircularProgress,
   Stack,
-  Paper,
+  Divider,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
 import {
   EmojiEvents as TrophyIcon,
-  PhotoLibrary as PhotoIcon,
-  Pets as SpeciesIcon,
   RemoveRedEye as EyeIcon,
 } from '@mui/icons-material';
 import { supabase } from '../supabaseClient';
@@ -39,7 +30,7 @@ interface LeaderboardEntry {
 const LeaderboardPage = () => {
   const { user } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState<number | null>(null);
@@ -141,126 +132,158 @@ const LeaderboardPage = () => {
     fetchLeaderboard();
   }, [user]);
 
-  const getRankIcon = (rank: number) => {
+  const getRankDisplay = (rank: number) => {
     switch (rank) {
       case 1:
-        return (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <TrophyIcon sx={{ color: '#FFD700' }} />
-            <Typography variant="h6" fontWeight={700}>1</Typography>
-          </Stack>
-        );
+        return {
+          icon: <TrophyIcon sx={{ color: '#FFD700', fontSize: 24 }} />,
+          text: '1st',
+          color: '#FFD700'
+        };
       case 2:
-        return (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <TrophyIcon sx={{ color: '#C0C0C0' }} />
-            <Typography variant="h6" fontWeight={700}>2</Typography>
-          </Stack>
-        );
+        return {
+          icon: <TrophyIcon sx={{ color: '#C0C0C0', fontSize: 24 }} />,
+          text: '2nd',
+          color: '#C0C0C0'
+        };
       case 3:
-        return (
-          <Stack direction="row" alignItems="center" spacing={0.5}>
-            <TrophyIcon sx={{ color: '#CD7F32' }} />
-            <Typography variant="h6" fontWeight={700}>3</Typography>
-          </Stack>
-        );
+        return {
+          icon: <TrophyIcon sx={{ color: '#CD7F32', fontSize: 24 }} />,
+          text: '3rd',
+          color: '#CD7F32'
+        };
       default:
-        return <Typography variant="h6" fontWeight={700}>{rank}</Typography>;
+        return {
+          icon: null,
+          text: `${rank}${getOrdinalSuffix(rank)}`,
+          color: theme.palette.text.primary
+        };
     }
   };
 
-  const getRankBadgeColor = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return 'warning'; // Gold-ish
-      case 2:
-        return 'default'; // Silver-ish
-      case 3:
-        return 'secondary'; // Bronze-ish
-      default:
-        return 'primary';
-    }
+  const getOrdinalSuffix = (num: number) => {
+    const j = num % 10;
+    const k = num % 100;
+    if (j === 1 && k !== 11) return 'st';
+    if (j === 2 && k !== 12) return 'nd';
+    if (j === 3 && k !== 13) return 'rd';
+    return 'th';
   };
 
-  // Mobile-friendly leaderboard card component
-  const MobileLeaderboardCard = ({ entry }: { entry: LeaderboardEntry }) => (
-    <Card 
-      key={entry.user_id}
-      sx={{ 
-        mb: 2,
-        bgcolor: entry.user_id === user?.id ? 'action.selected' : 'inherit',
-        border: entry.user_id === user?.id ? 2 : 1,
-        borderColor: entry.user_id === user?.id ? 'primary.main' : 'divider',
-        width: '100%',
-        maxWidth: '100%',
-      }}
-    >
-      <CardContent sx={{ py: 2, px: 2 }}>
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ width: '100%' }}>
-          {/* Rank */}
-          <Box sx={{ minWidth: 50, textAlign: 'center', flexShrink: 0 }}>
-            {getRankIcon(entry.rank)}
-          </Box>
-          
-          {/* User Info */}
-          <Box sx={{ flexGrow: 1, minWidth: 0, width: '100%' }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1, width: '100%' }}>
-              <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36, flexShrink: 0 }}>
-                {entry.display_name.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box sx={{ minWidth: 0, flexGrow: 1, width: '100%' }}>
-                <Typography 
-                  variant="subtitle2" 
-                  fontWeight={600}
-                  sx={{ 
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    textAlign: 'left',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  {entry.display_name}
-                  {entry.user_id === user?.id && (
+  const LeaderboardCard = ({ entry, showDivider = true }: { entry: LeaderboardEntry, showDivider?: boolean }) => {
+    const rankDisplay = getRankDisplay(entry.rank);
+    const isCurrentUser = entry.user_id === user?.id;
+
+    return (
+      <Box>
+        <Box 
+          sx={{ 
+            py: 2,
+            px: isMobile ? 1 : 2,
+            bgcolor: isCurrentUser ? 'action.selected' : 'transparent',
+            borderRadius: isCurrentUser ? 1 : 0,
+            transition: 'background-color 0.2s ease'
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={isMobile ? 1 : 2} sx={{ width: '100%' }}>
+            {/* Rank */}
+            <Box 
+              sx={{ 
+                minWidth: isMobile ? 40 : 50, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                flexDirection: 'column',
+                textAlign: 'center'
+              }}
+            >
+              {rankDisplay.icon && (
+                <Box sx={{ mb: 0.5 }}>
+                  {rankDisplay.icon}
+                </Box>
+              )}
+              <Typography 
+                variant={isMobile ? "body2" : "subtitle2"} 
+                fontWeight={700} 
+                color={rankDisplay.color}
+                sx={{ fontSize: isMobile ? '0.8rem' : '0.9rem' }}
+              >
+                {rankDisplay.text}
+              </Typography>
+            </Box>
+            
+            {/* User Info */}
+            <Stack direction="row" alignItems="center" spacing={isMobile ? 1 : 1.5} sx={{ flexGrow: 1, minWidth: 0 }}>
+              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                <Stack direction={isMobile ? "column" : "row"} alignItems={isMobile ? "flex-start" : "center"} spacing={isMobile ? 0.5 : 1}>
+                  <Typography 
+                    variant={isMobile ? "body2" : "subtitle2"}
+                    fontWeight={600}
+                    sx={{ 
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      fontSize: isMobile ? '0.85rem' : '0.95rem',
+                      maxWidth: '100%'
+                    }}
+                  >
+                    {entry.display_name}
+                  </Typography>
+                  {isCurrentUser && (
                     <Chip 
                       label="You" 
                       size="small" 
                       color="primary" 
-                      sx={{ ml: 0.5, fontSize: '0.7rem', height: 20 }}
+                      sx={{ 
+                        fontSize: '0.7rem', 
+                        height: isMobile ? 18 : 20,
+                        alignSelf: isMobile ? 'flex-start' : 'center'
+                      }}
                     />
                   )}
-                </Typography>
+                </Stack>
               </Box>
             </Stack>
             
             {/* Stats */}
-            <Stack direction="row" spacing={2} sx={{ mt: 1, width: '100%' }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5, fontSize: '0.7rem' }}>
-                  Species
-                </Typography>
+            <Stack direction="row" spacing={isMobile ? 1 : 2} alignItems="center">
+              {/* Species */}
+              <Box sx={{ textAlign: 'center', minWidth: isMobile ? 35 : 45 }}>
                 <Chip 
                   label={entry.unique_species}
                   color={entry.unique_species > 0 ? 'success' : 'default'}
                   variant="outlined"
                   size="small"
-                  sx={{ fontSize: '0.75rem', height: 22 }}
+                  sx={{ 
+                    fontSize: isMobile ? '0.7rem' : '0.75rem', 
+                    height: isMobile ? 20 : 22,
+                    minWidth: isMobile ? 30 : 35
+                  }}
                 />
               </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5, fontSize: '0.7rem' }}>
-                  Photos
-                </Typography>
-                <Typography variant="body2" fontWeight={500} sx={{ lineHeight: '22px', fontSize: '0.8rem' }}>
+              
+              {/* Photos */}
+              <Box sx={{ textAlign: 'center', minWidth: isMobile ? 35 : 45 }}>
+                <Typography 
+                  variant="body2" 
+                  fontWeight={500}
+                  sx={{ 
+                    fontSize: isMobile ? '0.75rem' : '0.8rem',
+                    lineHeight: isMobile ? '20px' : '22px'
+                  }}
+                >
                   {entry.total_photos}
                 </Typography>
               </Box>
             </Stack>
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
-  );
+          </Stack>
+        </Box>
+        {showDivider && (
+          <Divider sx={{ mx: isMobile ? 1 : 2 }} />
+        )}
+      </Box>
+    );
+  };
 
   if (loading) {
     return (
@@ -272,61 +295,79 @@ const LeaderboardPage = () => {
 
   return (
     <Box sx={{ 
-      maxWidth: 800, 
-      mx: 'auto', 
-      p: { xs: 1, sm: 3 },
       width: '100%',
+      maxWidth: '100vw',
+      mx: 'auto', 
+      p: { xs: 1, sm: 2, md: 3 },
       boxSizing: 'border-box',
       overflowX: 'hidden'
     }}>
-      <Typography align="left" variant="h4" fontWeight={700} gutterBottom>
-        Leaderboard
-      </Typography>
-      <Typography align="left" variant="subtitle1" color="text.secondary" gutterBottom sx={{ pb: 1 }}>
-        Rankings based on unique bird species photographed
-        <Box component="span" sx={{ ml: 1, verticalAlign: 'middle' }}>
-          <EyeIcon fontSize="small" sx={{ color: 'action.active', verticalAlign: 'middle' }} />
-        </Box>
-      </Typography>
+      {/* Header */}
+      <Box sx={{ mb: 3, px: isMobile ? 1 : 0 }}>
+        <Typography 
+          variant={isMobile ? "h5" : "h4"} 
+          fontWeight={700} 
+          gutterBottom
+          sx={{ fontSize: isMobile ? '1.5rem' : '2.125rem' }}
+        >
+          Leaderboard
+        </Typography>
+        <Typography 
+          variant={isMobile ? "body2" : "subtitle1"} 
+          color="text.secondary" 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 0.5,
+            fontSize: isMobile ? '0.8rem' : '1rem'
+          }}
+        >
+          Rankings based on unique bird species
+          <EyeIcon sx={{ fontSize: isMobile ? 16 : 18, color: 'action.active' }} />
+        </Typography>
+      </Box>
 
       {/* User's Current Rank */}
       {user && userRank && (
-        <Card sx={{ mb: 3, bgcolor: 'grey.800', border: '1px solid', borderColor: 'grey.600' }}>
-          <CardContent sx={{ py: { xs: 2, md: 3 } }}>
+        <Card sx={{ mb: 3, bgcolor: 'primary.dark', color: 'primary.contrastText' }}>
+          <CardContent sx={{ py: isMobile ? 1.5 : 2, px: isMobile ? 1.5 : 2 }}>
             <Stack 
-              direction={{ xs: 'column', sm: 'row' }} 
-              alignItems={{ xs: 'flex-start', sm: 'center' }} 
-              spacing={2}
-              sx={{ textAlign: { xs: 'left', sm: 'inherit' } }}
+              direction="row" 
+              alignItems="center" 
+              spacing={isMobile ? 1 : 2}
             >
-              <Avatar sx={{ bgcolor: 'grey.700', width: { xs: 48, md: 56 }, height: { xs: 48, md: 56 } }}>
-                {getRankIcon(userRank)}
-              </Avatar>
-              <Box sx={{ flexGrow: 1, width: { xs: '100%', sm: 'auto' } }}>
-                <Typography variant="h6" fontWeight={600}>
-                  Your Rank: #{userRank}
-                  {userRank <= 3 && (
-                    <TrophyIcon 
-                      sx={{ 
-                        ml: 1, 
-                        color: userRank === 1 ? '#FFD700' : userRank === 2 ? '#C0C0C0' : '#CD7F32' 
-                      }} 
-                    />
-                  )}
+              <Box sx={{ display: 'flex', alignItems: 'center', minWidth: isMobile ? 40 : 50 }}>
+                {getRankDisplay(userRank).icon || (
+                  <Typography variant="h6" fontWeight={700}>
+                    #{userRank}
+                  </Typography>
+                )}
+              </Box>
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography 
+                  variant={isMobile ? "subtitle2" : "h6"} 
+                  fontWeight={600}
+                  sx={{ fontSize: isMobile ? '0.9rem' : '1.25rem' }}
+                >
+                  Your Rank: {getRankDisplay(userRank).text}
                 </Typography>
               </Box>
               <Chip 
                 label={`${leaderboard.find(entry => entry.user_id === user.id)?.unique_species || 0} species`}
-                color={getRankBadgeColor(userRank)}
                 variant="filled"
-                sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
+                sx={{ 
+                  bgcolor: 'primary.light',
+                  color: 'primary.contrastText',
+                  fontSize: isMobile ? '0.7rem' : '0.75rem',
+                  height: isMobile ? 22 : 24
+                }}
               />
             </Stack>
           </CardContent>
         </Card>
       )}
 
-      {/* Responsive Leaderboard */}
+      {/* Leaderboard */}
       {leaderboard.length === 0 ? (
         <Card>
           <CardContent sx={{ py: 4, textAlign: 'center' }}>
@@ -336,106 +377,63 @@ const LeaderboardPage = () => {
           </CardContent>
         </Card>
       ) : (
-        <>
-          {/* Mobile View: Cards */}
-          {isMobile ? (
-            <Box>
-              {leaderboard.map((entry) => (
-                <MobileLeaderboardCard key={entry.user_id} entry={entry} />
-              ))}
-            </Box>
-          ) : (
-            /* Desktop View: Table */
-            <Card sx={{ width: '100%', overflowX: 'hidden' }}>
-              <TableContainer component={Paper} sx={{ width: '100%', overflowX: 'hidden' }}>
-                <Table sx={{ width: '100%', tableLayout: 'fixed' }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 700, width: '15%' }}>Rank</TableCell>
-                      <TableCell sx={{ fontWeight: 700, width: '50%' }}>User</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: '17.5%' }}>
-                        <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                          <SpeciesIcon fontSize="small" />
-                          <span>Species</span>
-                        </Stack>
-                      </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 700, width: '17.5%' }}>
-                        <Stack direction="row" alignItems="center" justifyContent="center" spacing={0.5}>
-                          <PhotoIcon fontSize="small" />
-                          <span>Photos</span>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {leaderboard.map((entry) => (
-                      <TableRow 
-                        key={entry.user_id}
-                        sx={{ 
-                          bgcolor: entry.user_id === user?.id ? 'action.selected' : 'inherit',
-                          '&:hover': { bgcolor: 'action.hover' }
-                        }}
-                      >
-                        <TableCell sx={{ width: '15%' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {getRankIcon(entry.rank)}
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ width: '50%', maxWidth: 0 }}>
-                          <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
-                            <Avatar sx={{ bgcolor: 'primary.main', flexShrink: 0 }}>
-                              {entry.display_name.charAt(0).toUpperCase()}
-                            </Avatar>
-                            <Box sx={{ minWidth: 0, flexGrow: 1 }}>
-                              <Typography 
-                                variant="subtitle2" 
-                                fontWeight={600}
-                                sx={{ 
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                {entry.display_name}
-                                {entry.user_id === user?.id && (
-                                  <Chip 
-                                    label="You" 
-                                    size="small" 
-                                    color="primary" 
-                                    sx={{ ml: 1 }}
-                                  />
-                                )}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        </TableCell>
-                        <TableCell align="center" sx={{ width: '17.5%' }}>
-                          <Chip 
-                            label={entry.unique_species}
-                            color={entry.unique_species > 0 ? 'success' : 'default'}
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell align="center" sx={{ width: '17.5%' }}>
-                          <Typography variant="body2" fontWeight={500}>
-                            {entry.total_photos}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Card>
-          )}
-        </>
+        <Card sx={{ width: '100%' }}>
+          <CardContent sx={{ p: 0 }}>
+            {/* Column Headers - Only on larger screens */}
+            {!isMobile && (
+              <Box sx={{ px: 2, py: 1.5, bgcolor: 'grey.800', borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Stack direction="row" alignItems="center" spacing={2}>
+                  <Box sx={{ minWidth: 50, textAlign: 'center' }}>
+                    <Typography variant="caption" fontWeight={700} color="grey.300">
+                      RANK
+                    </Typography>
+                  </Box>
+                  <Box sx={{ flexGrow: 1, ml: 6 }}>
+                    <Typography variant="caption" fontWeight={700} color="grey.300">
+                      USER
+                    </Typography>
+                  </Box>
+                  <Box sx={{ minWidth: 45, textAlign: 'center' }}>
+                    <Typography variant="caption" fontWeight={700} color="grey.300">
+                      SPECIES
+                    </Typography>
+                  </Box>
+                  <Box sx={{ minWidth: 45, textAlign: 'center' }}>
+                    <Typography variant="caption" fontWeight={700} color="grey.300">
+                      PHOTOS
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Box>
+            )}
+            
+            {/* Leaderboard Entries */}
+            {leaderboard.map((entry, index) => (
+              <LeaderboardCard 
+                key={entry.user_id} 
+                entry={entry} 
+                showDivider={index < leaderboard.length - 1}
+              />
+            ))}
+          </CardContent>
+        </Card>
       )}
 
-      {/* Footer Info */}
-      <Box sx={{ mt: 3, textAlign: 'center', px: 1 }}>
-        <Typography variant="body2" color="text.secondary">
-          <EyeIcon fontSize="small" sx={{ color: 'action.active', verticalAlign: 'middle', mr: 0.5 }} />
-          Only photos visible in the "dex" (species view) are counted. Hidden photos are excluded from the leaderboard.
+      {/* Footer */}
+      <Box sx={{ mt: 3, textAlign: 'center', px: isMobile ? 1 : 0 }}>
+        <Typography 
+          variant="caption" 
+          color="text.secondary"
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: 0.5,
+            fontSize: isMobile ? '0.7rem' : '0.75rem'
+          }}
+        >
+          <EyeIcon sx={{ fontSize: 14 }} />
+          Only photos visible in the "dex" are counted
         </Typography>
       </Box>
     </Box>
