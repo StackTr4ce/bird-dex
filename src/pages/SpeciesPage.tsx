@@ -17,6 +17,7 @@ import SupabaseImage from '../components/SupabaseImage';
 import CloseIcon from '@mui/icons-material/Close';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../components/AuthProvider';
@@ -36,6 +37,7 @@ const SpeciesPage = () => {
   const speciesId = params.speciesId || params.id;
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [topPhotoId, setTopPhotoId] = useState<string | null>(null);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
   const [speciesName, setSpeciesName] = useState('');
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -193,12 +195,15 @@ const SpeciesPage = () => {
                   boxShadow: photo.id === topPhotoId ? 2 : 0,
                   '&:hover': {
                     transform: 'scale(1.02)',
-                    '& .photo-overlay': {
-                      opacity: 1,
-                    },
                   },
                 }}
-                onClick={() => navigate(`/photo/${photo.id}`)}
+                onClick={() => {
+                  if (selectedPhotoId === photo.id) {
+                    setSelectedPhotoId(null); // Deselect if already selected
+                  } else {
+                    setSelectedPhotoId(photo.id); // Select this photo
+                  }
+                }}
               >
                 <SupabaseImage
                   path={photo.thumbnail_url || photo.url}
@@ -209,66 +214,79 @@ const SpeciesPage = () => {
                     objectFit: 'cover',
                   }}
                 />
-                {/* Overlay for actions */}
-                <Box
-                  className="photo-overlay"
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%)',
-                    opacity: 0,
-                    transition: 'opacity 0.2s ease',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'flex-end',
-                    p: 1.5,
-                  }}
-                >
-                  <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, zIndex: 2 }}>
-                    <Tooltip title={photo.id === topPhotoId ? 'This is your top photo' : 'Set as Top Photo'}>
-                      <span>
+                {/* Overlay for actions - only show when photo is selected */}
+                {selectedPhotoId === photo.id && (
+                  <Box
+                    className="photo-overlay"
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      p: 1.5,
+                    }}
+                  >
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, zIndex: 2 }}>
+                      <Tooltip title="Open Photo Detail" placement="right">
                         <IconButton
                           size="small"
-                          sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'primary.dark', color: 'white' }, width: 32, height: 32, color: photo.id === topPhotoId ? '#1976d2' : '#616161', boxShadow: photo.id === topPhotoId ? 2 : 0, mb: 0.5 }}
-                          onClick={e => { e.stopPropagation(); if (photo.id !== topPhotoId) setAsTopPhoto(photo.id); }}
-                          disabled={updating || photo.id === topPhotoId}
+                          sx={{ 
+                            bgcolor: 'rgba(255,255,255,0.9)', 
+                            '&:hover': { bgcolor: 'primary.main', color: 'white' }, 
+                            width: 32, 
+                            height: 32, 
+                            color: 'grey.600',
+                            mb: 0.5 
+                          }}
+                          onClick={e => { 
+                            e.stopPropagation(); 
+                            navigate(`/photo/${photo.id}`); 
+                          }}
                         >
-                          {photo.id === topPhotoId ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                          <OpenInNewIcon fontSize="small" />
                         </IconButton>
-                      </span>
-                    </Tooltip>
-                    <Tooltip title="Hide from Dex (species view)">
-                      <IconButton
-                        size="small"
-                        sx={{
-                          bgcolor: 'rgba(255,255,255,0.9)',
-                          width: 32,
-                          height: 32,
-                          color: 'grey.400',
-                          transition: 'color 0.2s',
-                          '&:hover': {
-                            bgcolor: 'action.active',
-                            color: 'grey.700',
-                          },
-                        }}
-                        onClick={e => {
-                          e.stopPropagation();
-                          setPhotoToHide(photo);
-                          setHideDialogOpen(true);
-                        }}
-                        disabled={updating}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                      </Tooltip>
+                      <Tooltip title={photo.id === topPhotoId ? 'This is your top photo' : 'Set as Top Photo'} placement="right">
+                        <span>
+                          <IconButton
+                            size="small"
+                            sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: 'primary.dark', color: 'white' }, width: 32, height: 32, color: photo.id === topPhotoId ? '#1976d2' : '#616161', boxShadow: photo.id === topPhotoId ? 2 : 0, mb: 0.5 }}
+                            onClick={e => { e.stopPropagation(); if (photo.id !== topPhotoId) setAsTopPhoto(photo.id); }}
+                            disabled={updating || photo.id === topPhotoId}
+                          >
+                            {photo.id === topPhotoId ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="Hide from Dex (species view)" placement="right">
+                        <IconButton
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.9)',
+                            '&:hover': { bgcolor: 'primary.main', color: 'white' },
+                            width: 32,
+                            height: 32,
+                            color: 'grey.600',
+                            mb: 0.5
+                          }}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setPhotoToHide(photo);
+                            setHideDialogOpen(true);
+                          }}
+                          disabled={updating}
+                        >
+                          <CloseIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </Box>
-                  <Typography variant="caption" color="white" sx={{ mt: 1, textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
-                    Uploaded: {new Date(photo.created_at).toLocaleString()}
-                  </Typography>
-                </Box>
+                )}
               </Box>
             ))
           )}
