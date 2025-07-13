@@ -206,7 +206,7 @@ const SpeciesPage = () => {
                 }}
               >
                 <SupabaseImage
-                  path={photo.thumbnail_url || photo.url}
+                  path={photo.url}
                   alt={speciesName ? `${speciesName} photo` : 'Bird photo'}
                   style={{
                     width: '100%',
