@@ -396,7 +396,7 @@ const FeedPage = () => {
                   {/* Photo */}
                   <Box sx={{ position: 'relative', borderRadius: 1, overflow: 'hidden', width: '100%' }}>
                     <SupabaseImage
-                      path={photo.thumbnail_url || photo.url}
+                      path={photo.url}
                       alt={`${photo.species_id} by ${photo.user_profile.display_name}`}
                       style={{
                         width: '100%',
